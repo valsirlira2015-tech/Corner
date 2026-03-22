@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscador de Contexto - Top 5</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+body {font-family:'Inter',sans-serif; background:#121214; color:#fff; padding:20px; margin:0;}
+.container {max-width:900px; margin:0 auto;}
+.card {background:#202024; padding:20px; border-radius:12px; border:1px solid #323238; margin-bottom:20px;}
+h1 {font-size:1.4rem; color:#00875f; margin-top:0; display:flex; align-items:center; gap:10px;}
+h2 {font-size:1.1rem; margin:15px 0 10px;}
+
+.row-flex {display:flex; gap:10px; flex-wrap:wrap;}
+.input-small {flex:1; min-width:120px; background:#121214; color:#fff; border:1px solid #323238; padding:10px 12px; border-radius:8px; font-size:14px; outline:none;}
+.input-small:focus {border-color:#00875f;}
+
+select {background:#1c1c1f; color:#fff; border:1px solid #323238; padding:10px 12px; border-radius:8px; font-size:13px; outline:none; font-family:'Inter',sans-serif; min-width:200px;}
+select:focus {border-color:#00875f;}
+
+button {background:#00875f; color:#fff; border:none; padding:12px 22px; border-radius:8px; cursor:pointer; font-weight:600; font-size:14px; transition:background 0.2s;}
+button:hover {background:#015f43;}
+button:disabled {background:#323238; color:#7c7c8a; cursor:not-allowed;}
+
+.btn-secondary {background:#1c1c1f; border:1px solid #323238; color:#e1e1e6; margin-top:10px;}
+.btn-secondary:hover {background:#29292e; border-color:#00875f;}
+
+.btn-scanner {background:#7c3aed; color:#fff;}
+.btn-scanner:hover {background:#5b21b6;}
+
+.btn-telegram {background:#0088cc; color:#fff; border:none; padding:12px 22px; border-radius:8px; cursor:pointer; font-weight:600; font-size:14px; transition:background 0.2s; display:none; margin-top:10px;}
+.btn-telegram:hover {background:#006699;}
+.btn-telegram:disabled {background:#323238; color:#7c7c8a; cursor:not-allowed;}
+.telegram-status {font-size:13px; color:#a8a8b3; margin-top:6px; display:none;}
+
+.progress-bar-container {width:100%; height:8px; background:#323238; border-radius:4px; margin-top:15px; overflow:hidden; display:none;}
+.progress-bar {height:100%; background:#38bdf8; width:0%; transition:width 0.3s;}
+.status-text {font-size:13px; color:#a8a8b3; margin-top:8px; text-align:center; font-weight:500;}
+
+.res-container {display:none;}
+.summary-box {background:#1c1c1f; border:1px solid #00875f; padding:16px; border-radius:10px; text-align:center; margin-bottom:20px;}
+.summary-title {font-size:1rem; font-weight:600; color:#fff; margin-bottom:6px;}
+.big-number {font-size:2rem; font-weight:700; color:#00875f;}
+.small-desc {font-size:13px; color:#a8a8b3; margin-top:4px;}
+
+.match-list {display:flex; flex-direction:column; gap:10px;}
+.match-item {background:#1c1c1f; border:1px solid #323238; padding:15px; border-radius:8px; display:flex; flex-direction:column; gap:6px;}
+.match-header {display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;}
+.match-title {font-weight:600; font-size:14px;}
+.tag-badge {background:#00875f22; color:#00B37E; border:1px solid #00875f55; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:600;}
+.confidence-badge {padding:3px 8px; border-radius:999px; font-size:11px; font-weight:600;}
+.confidence-alta {background:#00875f22; color:#00B37E; border:1px solid #00875f55;}
+.confidence-media {background:#c4760022; color:#FBA94C; border:1px solid #c4760055;}
+.confidence-baixa {background:#f7345822; color:#f75a68; border:1px solid #f7345855;}
+.result-line {font-size:13px; color:#e1e1e6;}
+.btn-link {background:transparent; border:1px solid #38bdf8; color:#38bdf8; padding:4px 10px; font-size:11px; border-radius:6px; cursor:pointer;}
+.label-inline {font-size:12px; color:#a8a8b3; display:flex; align-items:center; gap:6px;}
+.input-limiar {width:70px; text-align:center;}
+
+.cache-info {display:flex; gap:15px; align-items:center; flex-wrap:wrap; margin-top:10px; padding:10px; background:#1c1c1f; border-radius:8px; border:1px solid #323238;}
+.cache-stat {font-size:12px; color:#a8a8b3;}
+.cache-stat b {color:#00B37E;}
+
+.hist-item {background:#1c1c1f; border:1px solid #323238; padding:12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;}
+.hist-info {font-size:13px; color:#e1e1e6;}
+.hist-date {font-size:11px; color:#7c7c8a;}
+.hist-pct {font-size:1.1rem; font-weight:700;}
+
+.tabs {display:flex; gap:0; margin-bottom:20px;}
+.tab-btn {flex:1; padding:12px; text-align:center; background:#1c1c1f; border:1px solid #323238; color:#a8a8b3; font-weight:600; font-size:13px; cursor:pointer; transition:all 0.2s;}
+.tab-btn:first-child {border-radius:8px 0 0 8px;}
+.tab-btn:last-child {border-radius:0 8px 8px 0;}
+.tab-btn.active {background:#00875f; color:#fff; border-color:#00875f;}
+
+/* Scanner */
+.scanner-result {background:#1c1c1f; border-radius:10px; border:1px solid #323238; overflow:hidden; margin-top:15px; display:none;}
+.scanner-header {background:#7c3aed22; border-bottom:1px solid #7c3aed55; padding:15px; text-align:center;}
+.scanner-header h3 {margin:0; color:#a78bfa; font-size:1rem;}
+.scanner-header .scanner-team {font-size:1.2rem; font-weight:700; color:#fff; margin-top:4px;}
+.scanner-header .scanner-match {font-size:13px; color:#a8a8b3; margin-top:2px;}
+
+.scanner-ranking {padding:10px;}
+.scanner-row {display:flex; align-items:center; gap:10px; padding:12px 10px; border-bottom:1px solid #29292e; transition:background 0.2s;}
+.scanner-row:last-child {border-bottom:none;}
+.scanner-row:hover {background:#29292e;}
+.scanner-pos {font-size:1.1rem; font-weight:700; min-width:30px; text-align:center;}
+.scanner-cenario-name {flex:1; font-size:13px; color:#e1e1e6; line-height:1.3;}
+.scanner-cenario-name small {display:block; color:#7c7c8a; font-size:11px; margin-top:2px;}
+.scanner-pct {font-size:1.1rem; font-weight:700; min-width:55px; text-align:right;}
+.scanner-detail {font-size:11px; color:#a8a8b3; min-width:70px; text-align:right;}
+.scanner-divider {padding:8px 10px; font-size:11px; color:#7c7c8a; background:#1a1a1e; font-weight:600; letter-spacing:1px;}
+.scanner-empty {padding:12px 10px; font-size:12px; color:#7c7c8a; text-align:center; font-style:italic;}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="tabs">
+    <div class="tab-btn active" onclick="switchTab('analise')">🎯 Análise</div>
+    <div class="tab-btn" onclick="switchTab('scanner')">🔍 Scanner</div>
+    <div class="tab-btn" onclick="switchTab('historico')">📊 Histórico</div>
+    <div class="tab-btn" onclick="switchTab('cache')">💾 Cache</div>
+  </div>
+
+  <!-- TAB: ANÁLISE -->
+  <div id="tabAnalise">
+    <div class="card">
+      <h1>🎯 Buscador de Contexto - Top 5 IDs</h1>
+      <p style="color:#a8a8b3; font-size:13px; line-height:1.5;">
+        Cole até <b>5 IDs de partidas</b>, escolha o cenário e o lado (Casa/Fora).
+        O sistema analisa o histórico de cada jogo e só mostra os que atingirem o limiar mínimo de acerto.
+      </p>
+
+      <h2>IDs das Partidas</h2>
+      <div class="row-flex">
+        <input id="id1" class="input-small" placeholder="ID 1 (ex: rnf6g)">
+        <input id="id2" class="input-small" placeholder="ID 2">
+        <input id="id3" class="input-small" placeholder="ID 3">
+        <input id="id4" class="input-small" placeholder="ID 4">
+        <input id="id5" class="input-small" placeholder="ID 5">
+      </div>
+
+      <h2>Configurações</h2>
+      <div class="row-flex">
+        <select id="mandoSelect">
+          <option value="home">Analisar Time da CASA</option>
+          <option value="away">Analisar Time de FORA</option>
+        </select>
+
+        <select id="cenarioSelect">
+          <option value="derrota_ht">Pressão 1ºT: Perdendo 0-35' -> Canto Total (37-HT)</option>
+          <option value="empate_ht">Pressão 1ºT: Empate aos 36' -> Canto Total (37-HT)</option>
+          <option value="derrota_2t">Pressão 2ºT: Perdendo no HT -> 5+ Cantos Totais 2ºT</option>
+          <option value="pressao_70">Pressão Final 70+: Perdendo/Empatado aos 69' -> 3+ Cantos Totais</option>
+          <option value="pressao_80">Pressão Final 80+: Perdendo/Empatado aos 79' -> 2+ Cantos Totais</option>
+          <option value="retranca">Jogo Aberto 2ºT: Ganhando no HT -> 5+ Cantos Totais 2ºT</option>
+          <option value="reacao_imediata">Reação Imediata: 1º Gol -> 2+ Cantos Totais nos 10'</option>
+          <option value="vermelho_1t">Cartão Vermelho 1ºT: Expulsão até 35' -> 1+ Canto até fim do 1ºT</option>
+          <option value="vermelho_2t">Cartão Vermelho 2ºT: Expulsão até 70' -> 3+ Cantos até fim do 2ºT</option>
+          <option value="zero_zero_60">0x0 aos 60': Empate sem gols -> 3+ Cantos Totais (60-FT)</option>
+          <option value="multi_gol">Multi-Gol 1ºT: 3+ Gols no 1ºT -> 5+ Cantos Totais no 2ºT</option>
+        </select>
+
+        <div class="label-inline">
+          Limiar:
+          <input id="limiarInput" class="input-small input-limiar" type="number" min="0" max="100" value="60">%
+        </div>
+
+        <button id="btnBuscar" onclick="analisarTop5()">🚀 Analisar 5 Jogos</button>
+      </div>
+
+      <div class="progress-bar-container" id="progContainer">
+        <div class="progress-bar" id="progBar"></div>
+      </div>
+      <div class="status-text" id="statusText"></div>
+    </div>
+
+    <div id="resultadoContainer" class="res-container">
+      <div class="summary-box">
+        <div class="summary-title">Resumo dos Melhores Jogos</div>
+        <div class="big-number" id="resPct">0%</div>
+        <div class="small-desc" id="resFractions">0 jogos acima do limiar</div>
+      </div>
+      <div class="match-list" id="matchList"></div>
+      <button class="btn-telegram" id="btnTelegram" onclick="enviarTelegram()">📲 Enviar para Telegram</button>
+      <div class="telegram-status" id="telegramStatus"></div>
+    </div>
+  </div>
+
+  <!-- TAB: SCANNER -->
+  <div id="tabScanner" style="display:none;">
+    <div class="card">
+      <h1>🔍 Scanner de Cenários</h1>
+      <p style="color:#a8a8b3; font-size:13px; line-height:1.5;">
+        Cole <b>1 ID de partida</b> e escolha o mando. O sistema analisa <b>todos os 11 cenários</b> de uma vez
+        e mostra um ranking dos mais promissores. <b>Mesmas requisições</b> de uma análise normal!
+      </p>
+
+      <h2>Configuração</h2>
+      <div class="row-flex">
+        <input id="scannerGameId" class="input-small" placeholder="ID da Partida (ex: rnf6g)" style="max-width:250px;">
+        <select id="scannerMando">
+          <option value="home">Analisar Time da CASA</option>
+          <option value="away">Analisar Time de FORA</option>
+        </select>
+        <div class="label-inline">
+          Limiar:
+          <input id="scannerLimiar" class="input-small input-limiar" type="number" min="0" max="100" value="50">%
+        </div>
+        <button class="btn-scanner" id="btnScanner" onclick="executarScanner()">🔍 Escanear Cenários</button>
+      </div>
+
+      <div class="progress-bar-container" id="scannerProgContainer">
+        <div class="progress-bar" id="scannerProgBar"></div>
+      </div>
+      <div class="status-text" id="scannerStatusText"></div>
+    </div>
+
+    <div class="scanner-result" id="scannerResult">
+      <div class="scanner-header">
+        <h3>🏆 Ranking de Cenários</h3>
+        <div class="scanner-team" id="scannerTeamName">-</div>
+        <div class="scanner-match" id="scannerMatchName">-</div>
+      </div>
+      <div class="scanner-ranking" id="scannerRanking"></div>
+    </div>
+
+    <button class="btn-telegram" id="btnTelegramScanner" onclick="enviarTelegramScanner()" style="display:none;">📲 Enviar Scanner para Telegram</button>
+    <div class="telegram-status" id="telegramStatusScanner" style="display:none;"></div>
+  </div>
+
+  <!-- TAB: HISTÓRICO -->
+  <div id="tabHistorico" style="display:none;">
+    <div class="card">
+      <h1>📊 Histórico de Análises</h1>
+      <p style="color:#a8a8b3; font-size:13px;">Todas as análises realizadas, salvas automaticamente no seu dispositivo.</p>
+      <div class="row-flex" style="margin-bottom:15px;">
+        <select id="filtroHistCenario" onchange="renderHistorico()">
+          <option value="todos">Todos os Cenários</option>
+        </select>
+        <button class="btn-secondary" onclick="limparHistorico()">🗑️ Limpar Histórico</button>
+      </div>
+      <div id="historicoList"></div>
+      <div id="historicoStats" style="margin-top:15px;"></div>
+    </div>
+  </div>
+
+  <!-- TAB: CACHE -->
+  <div id="tabCache" style="display:none;">
+    <div class="card">
+      <h1>💾 Gerenciamento de Cache</h1>
+      <p style="color:#a8a8b3; font-size:13px;">O cache armazena respostas da API para acelerar análises futuras. TTL: 24 horas.</p>
+      <div class="cache-info" id="cacheInfo">
+        <div class="cache-stat">Entradas: <b id="cacheCount">0</b></div>
+        <div class="cache-stat">Tamanho: <b id="cacheSize">0 KB</b></div>
+        <div class="cache-stat">Hits: <b id="cacheHits">0</b></div>
+        <div class="cache-stat">Misses: <b id="cacheMisses">0</b></div>
+      </div>
+      <div class="row-flex" style="margin-top:15px;">
+        <button class="btn-secondary" onclick="limparCacheExpirado()">🧹 Limpar Expirados</button>
+        <button class="btn-secondary" onclick="limparTodoCache()">🗑️ Limpar Todo Cache</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ========================================
+// CONFIGURAÇÕES
+// ========================================
+const MYTOKEN = '45003_ec8357116e';
+const TG_BOT_TOKEN = '8645338323:AAG5jlzVICHNz-tYHBQtfZZ-8_gr_V_FOiw';
+const TG_CHAT_ID = '294730685';
+const CACHE_TTL = 24 * 60 * 60 * 1000;
+const DB_NAME = 'BuscadorContextoDB';
+const DB_VERSION = 1;
+const PARALLEL_BATCH = 5;
+
+let ultimoRelatorio = null;
+let ultimoRelatorioScanner = null;
+let cacheHitsSession = 0;
+let cacheMissesSession = 0;
+
+// Todos os cenários disponíveis
+const TODOS_CENARIOS = [
+    { id: 'derrota_ht', nome: 'Pressão 1ºT: Perdendo', desc: 'Perdendo 0-35\' → Canto Total (37-HT)', greenDesc: '≥1 canto' },
+    { id: 'empate_ht', nome: 'Pressão 1ºT: Empate', desc: 'Empate aos 36\' → Canto Total (37-HT)', greenDesc: '≥1 canto' },
+    { id: 'derrota_2t', nome: 'Pressão 2ºT: Perdendo', desc: 'Perdendo no HT → 5+ Cantos 2ºT', greenDesc: '≥5 cantos' },
+    { id: 'pressao_70', nome: 'Pressão Final 70+', desc: 'Perdendo/Empatado 69\' → 3+ Cantos', greenDesc: '≥3 cantos' },
+    { id: 'pressao_80', nome: 'Pressão Final 80+', desc: 'Perdendo/Empatado 79\' → 2+ Cantos', greenDesc: '≥2 cantos' },
+    { id: 'retranca', nome: 'Jogo Aberto 2ºT', desc: 'Ganhando no HT → 5+ Cantos 2ºT', greenDesc: '≥5 cantos' },
+    { id: 'reacao_imediata', nome: 'Reação Imediata', desc: '1º Gol → 2+ Cantos nos 10\'', greenDesc: '≥2 cantos' },
+    { id: 'vermelho_1t', nome: 'Vermelho 1ºT', desc: 'Expulsão até 35\' → Canto até fim 1ºT', greenDesc: '≥1 canto' },
+    { id: 'vermelho_2t', nome: 'Vermelho 2ºT', desc: 'Expulsão até 70\' → 3+ Cantos até FT', greenDesc: '≥3 cantos' },
+    { id: 'zero_zero_60', nome: '0x0 aos 60\'', desc: 'Empate sem gols 60\' → 3+ Cantos (60-FT)', greenDesc: '≥3 cantos' },
+    { id: 'multi_gol', nome: 'Multi-Gol 1ºT', desc: '3+ Gols no 1ºT → 5+ Cantos 2ºT', greenDesc: '≥5 cantos' }
+];
+
+// ========================================
+// INDEXEDDB
+// ========================================
+function abrirDB() {
+    return new Promise((resolve, reject) => {
+        let req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+            let db = e.target.result;
+            if (!db.objectStoreNames.contains('cacheAPI')) {
+                let store = db.createObjectStore('cacheAPI', { keyPath: 'chave' });
+                store.createIndex('timestamp', 'timestamp', { unique: false });
+            }
+            if (!db.objectStoreNames.contains('historicoAnalises')) {
+                let store = db.createObjectStore('historicoAnalises', { keyPath: 'id', autoIncrement: true });
+                store.createIndex('cenario', 'cenario', { unique: false });
+                store.createIndex('data', 'data', { unique: false });
+            }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function cacheGet(chave) {
+    try {
+        let db = await abrirDB();
+        return new Promise((resolve) => {
+            let tx = db.transaction('cacheAPI', 'readonly');
+            let store = tx.objectStore('cacheAPI');
+            let req = store.get(chave);
+            req.onsuccess = () => {
+                let result = req.result;
+                if (result && (Date.now() - result.timestamp < CACHE_TTL)) {
+                    cacheHitsSession++;
+                    resolve(result.dados);
+                } else {
+                    cacheMissesSession++;
+                    resolve(null);
+                }
+            };
+            req.onerror = () => { cacheMissesSession++; resolve(null); };
+        });
+    } catch (e) { cacheMissesSession++; return null; }
+}
+
+async function cacheSet(chave, dados) {
+    try {
+        let db = await abrirDB();
+        return new Promise((resolve) => {
+            let tx = db.transaction('cacheAPI', 'readwrite');
+            let store = tx.objectStore('cacheAPI');
+            store.put({ chave, dados, timestamp: Date.now() });
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => resolve(false);
+        });
+    } catch (e) { return false; }
+}
+
+async function getCacheStats() {
+    try {
+        let db = await abrirDB();
+        return new Promise((resolve) => {
+            let tx = db.transaction('cacheAPI', 'readonly');
+            let req = tx.objectStore('cacheAPI').getAll();
+            req.onsuccess = () => {
+                let items = req.result || [];
+                let size = new Blob([JSON.stringify(items)]).size;
+                let agora = Date.now();
+                let validos = items.filter(i => agora - i.timestamp < CACHE_TTL).length;
+                resolve({ total: items.length, validos, size });
+            };
+            req.onerror = () => resolve({ total: 0, validos: 0, size: 0 });
+        });
+    } catch (e) { return { total: 0, validos: 0, size: 0 }; }
+}
+
+async function limparCacheExpirado() {
+    try {
+        let db = await abrirDB();
+        let tx = db.transaction('cacheAPI', 'readwrite');
+        let store = tx.objectStore('cacheAPI');
+        let req = store.getAll();
+        req.onsuccess = () => {
+            let agora = Date.now();
+            for (let item of req.result) {
+                if (agora - item.timestamp >= CACHE_TTL) store.delete(item.chave);
+            }
+        };
+        tx.oncomplete = () => { atualizarCacheUI(); alert('Cache expirado limpo!'); };
+    } catch (e) { alert('Erro ao limpar cache.'); }
+}
+
+async function limparTodoCache() {
+    if (!confirm('Limpar todo o cache?')) return;
+    try {
+        let db = await abrirDB();
+        let tx = db.transaction('cacheAPI', 'readwrite');
+        tx.objectStore('cacheAPI').clear();
+        tx.oncomplete = () => { atualizarCacheUI(); alert('Cache limpo!'); };
+    } catch (e) { alert('Erro ao limpar cache.'); }
+}
+
+async function atualizarCacheUI() {
+    let stats = await getCacheStats();
+    document.getElementById('cacheCount').innerText = stats.validos + ' / ' + stats.total;
+    document.getElementById('cacheSize').innerText = (stats.size / 1024).toFixed(1) + ' KB';
+    document.getElementById('cacheHits').innerText = cacheHitsSession;
+    document.getElementById('cacheMisses').innerText = cacheMissesSession;
+}
+
+// ========================================
+// HISTÓRICO
+// ========================================
+async function salvarHistorico(entry) {
+    try {
+        let db = await abrirDB();
+        return new Promise((resolve) => {
+            let tx = db.transaction('historicoAnalises', 'readwrite');
+            tx.objectStore('historicoAnalises').add(entry);
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => resolve(false);
+        });
+    } catch (e) { return false; }
+}
+
+async function getHistorico() {
+    try {
+        let db = await abrirDB();
+        return new Promise((resolve) => {
+            let tx = db.transaction('historicoAnalises', 'readonly');
+            let req = tx.objectStore('historicoAnalises').getAll();
+            req.onsuccess = () => resolve(req.result || []);
+            req.onerror = () => resolve([]);
+        });
+    } catch (e) { return []; }
+}
+
+async function limparHistorico() {
+    if (!confirm('Limpar todo o histórico?')) return;
+    try {
+        let db = await abrirDB();
+        let tx = db.transaction('historicoAnalises', 'readwrite');
+        tx.objectStore('historicoAnalises').clear();
+        tx.oncomplete = () => { renderHistorico(); alert('Histórico limpo!'); };
+    } catch (e) { alert('Erro ao limpar histórico.'); }
+}
+
+async function renderHistorico() {
+    let historico = await getHistorico();
+    let filtro = document.getElementById('filtroHistCenario').value;
+
+    let selectFiltro = document.getElementById('filtroHistCenario');
+    let cenarios = [...new Set(historico.map(h => h.cenario))];
+    let optionsHTML = '<option value="todos">Todos os Cenários</option>';
+    cenarios.forEach(c => { optionsHTML += `<option value="${c}" ${filtro === c ? 'selected' : ''}>${c}</option>`; });
+    selectFiltro.innerHTML = optionsHTML;
+
+    let filtrado = filtro === 'todos' ? historico : historico.filter(h => h.cenario === filtro);
+    filtrado.sort((a, b) => new Date(b.dataCompleta) - new Date(a.dataCompleta));
+
+    let container = document.getElementById('historicoList');
+    if (filtrado.length === 0) {
+        container.innerHTML = '<p style="color:#7c7c8a; font-size:13px;">Nenhuma análise salva ainda.</p>';
+        document.getElementById('historicoStats').innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    filtrado.forEach(h => {
+        let emoji = h.media >= 80 ? '🟢' : h.media >= 60 ? '🟡' : '🔴';
+        let tipo = h.tipo === 'scanner' ? '🔍' : '🎯';
+        let jogosStr = h.jogos ? h.jogos.map(j => `${j.team || j.cenario || ''} (${j.pct}%)`).join(', ') : '';
+        html += `
+            <div class="hist-item">
+                <div>
+                    <div class="hist-info">${tipo} ${emoji} <b>${h.cenario}</b> — ${h.mando === 'home' ? 'Casa' : 'Fora'}</div>
+                    <div class="hist-date">📅 ${h.data} | ${h.qtdBons}/${h.qtdAnalisados} aprovados</div>
+                    <div style="font-size:11px; color:#7c7c8a; margin-top:4px;">${jogosStr}</div>
+                </div>
+                <div class="hist-pct" style="color:${h.media >= 60 ? '#00B37E' : '#f75a68'}">${h.media}%</div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+
+    let totalAnalises = filtrado.length;
+    let mediaGeral = Math.round(filtrado.reduce((s, h) => s + h.media, 0) / totalAnalises);
+    let acima60 = filtrado.filter(h => h.media >= 60).length;
+    document.getElementById('historicoStats').innerHTML = `
+        <div class="cache-info">
+            <div class="cache-stat">Total: <b>${totalAnalises}</b></div>
+            <div class="cache-stat">Média Geral: <b>${mediaGeral}%</b></div>
+            <div class="cache-stat">Acima 60%: <b>${acima60}/${totalAnalises}</b></div>
+        </div>
+    `;
+}
+
+// ========================================
+// TABS
+// ========================================
+function switchTab(tab) {
+    let tabs = ['analise', 'scanner', 'historico', 'cache'];
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', tabs[i] === tab);
+    });
+    tabs.forEach(t => {
+        let el = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (el) el.style.display = t === tab ? 'block' : 'none';
+    });
+    if (tab === 'historico') renderHistorico();
+    if (tab === 'cache') atualizarCacheUI();
+}
+
+// ========================================
+// FUNÇÕES AUXILIARES
+// ========================================
+function formatMinute(t) {
+    if (!t) return -1;
+    let s = String(t).trim();
+    if (s.indexOf('45+') === 0) return 45;
+    if (s.indexOf('90+') === 0) return 90;
+    return parseInt(s) || -1;
+}
+
+function isFirstHalfEvent(t) {
+    if (!t) return false;
+    let s = String(t).trim();
+    if (s.indexOf('45+') === 0) return true;
+    return (parseInt(s) || 0) <= 45;
+}
+
+function getConfianca(aptos) {
+    if (aptos >= 8) return { label: '🟢 Alta', classe: 'confidence-alta' };
+    if (aptos >= 4) return { label: '🟡 Média', classe: 'confidence-media' };
+    return { label: '🔴 Baixa', classe: 'confidence-baixa' };
+}
+
+async function fetchComCache(gameId, extraParams) {
+    let chave = `game_${gameId}_${extraParams || ''}`;
+    let cached = await cacheGet(chave);
+    if (cached) return cached;
+    let url = `https://cornerprobet.com/api/v3/getAnalysis.php?gameId=${gameId}&token=${MYTOKEN}`;
+    if (extraParams) url += `&${extraParams}`;
+    let res = await fetch(url);
+    let data = await res.json();
+    await cacheSet(chave, data);
+    return data;
+}
+
+async function processarEmLotes(ids, fn, tamLote) {
+    let resultados = [];
+    for (let i = 0; i < ids.length; i += tamLote) {
+        let lote = ids.slice(i, i + tamLote);
+        let resLote = await Promise.all(lote.map(id => fn(id)));
+        resultados.push(...resLote);
+    }
+    return resultados;
+}
+
+// ========================================
+// ANÁLISE DE UM JOGO — MULTI-CENÁRIO
+// ========================================
+function analisarJogoHistoricoMulti(dataHist, mainTeamName, cenariosParaAnalisar) {
+    try {
+        let game = dataHist.game;
+        if (!game || !game.eventsClean) return null;
+
+        let isMeuTimeHome = (game.homeName === mainTeamName);
+
+        let meuPlacar = 0, advPlacar = 0;
+        let meuPlacarHT = 0, advPlacarHT = 0;
+        let meuPlacarM36 = 0, advPlacarM36 = 0;
+        let meuPlacarM60 = 0, advPlacarM60 = 0;
+        let meuPlacarM69 = 0, advPlacarM69 = 0;
+        let meuPlacarM79 = 0, advPlacarM79 = 0;
+
+        let sofreuGolCedo = false;
+        let totalGols1T = 0;
+
+        let cantosTotais37 = [];
+        let cantosTotais2T = 0;
+        let cantosTotais60 = [];
+        let cantosTotais70 = [];
+        let cantosTotais80 = [];
+
+        let minPrimeiroGol = -1;
+        let cantosPosGol = [];
+
+        let minVermelho1T = -1;
+        let minVermelho2T = -1;
+        let cantosPosVermelho1T = 0;
+        let cantosPosVermelho2T = 0;
+
+        let events = game.eventsClean.sort((a, b) => formatMinute(a.t) - formatMinute(b.t));
+
+        for (let e of events) {
+            let min = formatMinute(e.t);
+            if (min === -1) continue;
+            let is1T = isFirstHalfEvent(e.t);
+
+            if (e.tp === 'g' || e.tp === 'p' || e.tp === 'og') {
+                if (e.h === 'h') isMeuTimeHome ? meuPlacar++ : advPlacar++;
+                if (e.h === 'a') isMeuTimeHome ? advPlacar++ : meuPlacar++;
+                if (is1T) {
+                    totalGols1T++;
+                    meuPlacarHT = meuPlacar; advPlacarHT = advPlacar;
+                    if (advPlacar > meuPlacar && min <= 35 && !sofreuGolCedo) sofreuGolCedo = true;
+                }
+                if (minPrimeiroGol === -1) minPrimeiroGol = min;
+            }
+
+            if (e.tp === 'rc' || e.tp === 'yr') {
+                if (is1T && min <= 35 && minVermelho1T === -1) minVermelho1T = min;
+                if (!is1T && min <= 70 && minVermelho2T === -1) minVermelho2T = min;
+            }
+
+            if (min <= 36 && is1T) { meuPlacarM36 = meuPlacar; advPlacarM36 = advPlacar; }
+            if (!is1T && min <= 60) { meuPlacarM60 = meuPlacar; advPlacarM60 = advPlacar; }
+            if (!is1T && min <= 69) { meuPlacarM69 = meuPlacar; advPlacarM69 = advPlacar; }
+            if (!is1T && min <= 79) { meuPlacarM79 = meuPlacar; advPlacarM79 = advPlacar; }
+
+            if (e.tp === 'c') {
+                if (is1T) {
+                    if (min >= 37) cantosTotais37.push(e.t);
+                } else {
+                    cantosTotais2T++;
+                    if (min >= 60) cantosTotais60.push(e.t);
+                    if (min >= 70) cantosTotais70.push(e.t);
+                    if (min >= 80) cantosTotais80.push(e.t);
+                }
+                if (minPrimeiroGol !== -1 && min >= minPrimeiroGol && min <= (minPrimeiroGol + 10)) cantosPosGol.push(e.t);
+                if (minVermelho1T !== -1 && is1T && min >= minVermelho1T) cantosPosVermelho1T++;
+                if (minVermelho2T !== -1 && !is1T && min >= minVermelho2T) cantosPosVermelho2T++;
+            }
+        }
+
+        // Avaliar TODOS os cenários pedidos
+        let resultados = {};
+        for (let cen of cenariosParaAnalisar) {
+            let entrou = false, green = false;
+
+            if (cen === 'derrota_ht' && sofreuGolCedo) { entrou = true; green = cantosTotais37.length > 0; }
+            else if (cen === 'empate_ht' && meuPlacarM36 === advPlacarM36) { entrou = true; green = cantosTotais37.length > 0; }
+            else if (cen === 'derrota_2t' && advPlacarHT > meuPlacarHT) { entrou = true; green = cantosTotais2T >= 5; }
+            else if (cen === 'pressao_70' && advPlacarM69 >= meuPlacarM69) { entrou = true; green = cantosTotais70.length >= 3; }
+            else if (cen === 'pressao_80' && advPlacarM79 >= meuPlacarM79) { entrou = true; green = cantosTotais80.length >= 2; }
+            else if (cen === 'retranca' && meuPlacarHT > advPlacarHT) { entrou = true; green = cantosTotais2T >= 5; }
+            else if (cen === 'reacao_imediata' && minPrimeiroGol !== -1) { entrou = true; green = cantosPosGol.length >= 2; }
+            else if (cen === 'vermelho_1t' && minVermelho1T !== -1) { entrou = true; green = cantosPosVermelho1T >= 1; }
+            else if (cen === 'vermelho_2t' && minVermelho2T !== -1) { entrou = true; green = cantosPosVermelho2T >= 3; }
+            else if (cen === 'zero_zero_60' && meuPlacarM60 === 0 && advPlacarM60 === 0) { entrou = true; green = cantosTotais60.length >= 3; }
+            else if (cen === 'multi_gol' && totalGols1T >= 3) { entrou = true; green = cantosTotais2T >= 5; }
+
+            resultados[cen] = { entrou, green };
+        }
+
+        return resultados;
+
+    } catch (e) { return null; }
+}
+
+// ========================================
+// ANÁLISE PRINCIPAL (1 CENÁRIO)
+// ========================================
+function analisarJogoHistorico(dataHist, mainTeamName, cenario) {
+    let r = analisarJogoHistoricoMulti(dataHist, mainTeamName, [cenario]);
+    if (!r || !r[cenario]) return null;
+    return r[cenario];
+}
+
+async function analisarJogo(gameId, mando, cenario) {
+    try {
+        let dataBase = await fetchComCache(gameId, 'games=20');
+        let historicoTime = mando === 'home' ? dataBase.lastGames.home.asHome : dataBase.lastGames.away.asAway;
+        let mainTeamName = mando === 'home' ? dataBase.game.homeName : dataBase.game.awayName;
+        if (!historicoTime || historicoTime.length === 0) throw new Error("Sem histórico.");
+
+        let idsParaAnalisar = historicoTime.map(g => g.id).filter(id => id);
+        let aptos = 0, greens = 0;
+
+        let dadosHistorico = await processarEmLotes(idsParaAnalisar, async (histId) => {
+            try { return await fetchComCache(histId, ''); } catch (e) { return null; }
+        }, PARALLEL_BATCH);
+
+        for (let dataHist of dadosHistorico) {
+            if (!dataHist) continue;
+            let resultado = analisarJogoHistorico(dataHist, mainTeamName, cenario);
+            if (!resultado) continue;
+            if (resultado.entrou) { aptos++; if (resultado.green) greens++; }
+        }
+
+        let pct = aptos > 0 ? Math.round((greens / aptos) * 100) : 0;
+
+        return {
+            ok: true, gameId, mainTeamName, mando, cenario, greens, aptos, pct,
+            confianca: getConfianca(aptos),
+            baseTitle: `${dataBase.game.homeName} ${dataBase.game.score} ${dataBase.game.awayName}`,
+            baseDate: dataBase.game.date || dataBase.game.gamedate || ""
+        };
+    } catch (e) { return { ok: false, gameId, error: e.message }; }
+}
+
+// ========================================
+// SCANNER DE CENÁRIOS
+// ========================================
+async function executarScanner() {
+    let gameId = document.getElementById('scannerGameId').value.trim();
+    if (!gameId) { alert('Digite o ID da partida.'); return; }
+
+    let mando = document.getElementById('scannerMando').value;
+    let limiar = parseInt(document.getElementById('scannerLimiar').value) || 0;
+
+    document.getElementById('btnScanner').disabled = true;
+    document.getElementById('scannerProgContainer').style.display = 'block';
+    document.getElementById('scannerProgBar').style.width = '10%';
+    document.getElementById('scannerStatusText').innerText = 'Buscando dados do jogo...';
+    document.getElementById('scannerResult').style.display = 'none';
+    document.getElementById('btnTelegramScanner').style.display = 'none';
+    document.getElementById('telegramStatusScanner').style.display = 'none';
+    ultimoRelatorioScanner = null;
+
+    try {
+        // 1. Buscar jogo base
+        let dataBase = await fetchComCache(gameId, 'games=20');
+        let historicoTime = mando === 'home' ? dataBase.lastGames.home.asHome : dataBase.lastGames.away.asAway;
+        let mainTeamName = mando === 'home' ? dataBase.game.homeName : dataBase.game.awayName;
+        let matchTitle = `${dataBase.game.homeName} ${dataBase.game.score || 'vs'} ${dataBase.game.awayName}`;
+        let matchDate = dataBase.game.date || dataBase.game.gamedate || '';
+
+        if (!historicoTime || historicoTime.length === 0) throw new Error("Sem histórico para este time.");
+
+        document.getElementById('scannerProgBar').style.width = '20%';
+        document.getElementById('scannerStatusText').innerText = `Buscando ${historicoTime.length} jogos do histórico...`;
+
+        // 2. Buscar todos os jogos do histórico em paralelo
+        let idsParaAnalisar = historicoTime.map(g => g.id).filter(id => id);
+        let dadosHistorico = await processarEmLotes(idsParaAnalisar, async (histId) => {
+            try { return await fetchComCache(histId, ''); } catch (e) { return null; }
+        }, PARALLEL_BATCH);
+
+        document.getElementById('scannerProgBar').style.width = '70%';
+        document.getElementById('scannerStatusText').innerText = 'Analisando 11 cenários...';
+
+        // 3. Rodar TODOS os cenários sobre os mesmos dados
+        let todosCenariosIds = TODOS_CENARIOS.map(c => c.id);
+        let resultadosPorCenario = {};
+        todosCenariosIds.forEach(c => { resultadosPorCenario[c] = { aptos: 0, greens: 0 }; });
+
+        for (let dataHist of dadosHistorico) {
+            if (!dataHist) continue;
+            let resultados = analisarJogoHistoricoMulti(dataHist, mainTeamName, todosCenariosIds);
+            if (!resultados) continue;
+            for (let cenId of todosCenariosIds) {
+                if (resultados[cenId] && resultados[cenId].entrou) {
+                    resultadosPorCenario[cenId].aptos++;
+                    if (resultados[cenId].green) resultadosPorCenario[cenId].greens++;
+                }
+            }
+        }
+
+        document.getElementById('scannerProgBar').style.width = '90%';
+
+        // 4. Montar ranking
+        let ranking = TODOS_CENARIOS.map(c => {
+            let r = resultadosPorCenario[c.id];
+            let pct = r.aptos > 0 ? Math.round((r.greens / r.aptos) * 100) : -1;
+            return { ...c, aptos: r.aptos, greens: r.greens, pct, confianca: getConfianca(r.aptos) };
+        });
+
+        let comDados = ranking.filter(r => r.aptos > 0).sort((a, b) => b.pct - a.pct);
+        let semDados = ranking.filter(r => r.aptos === 0);
+        let acimaLimiar = comDados.filter(r => r.pct >= limiar);
+        let abaixoLimiar = comDados.filter(r => r.pct < limiar);
+
+        // 5. Renderizar
+        document.getElementById('scannerTeamName').innerText = `⚽ ${mainTeamName} (${mando === 'home' ? 'Casa' : 'Fora'})`;
+        document.getElementById('scannerMatchName').innerText = `${matchTitle} — ${matchDate}`;
+
+        let html = '';
+
+        if (acimaLimiar.length > 0) {
+            html += `<div class="scanner-divider">✅ ACIMA DO LIMIAR (≥${limiar}%)</div>`;
+            acimaLimiar.forEach((r, idx) => {
+                let emoji = r.pct >= 80 ? '🟢' : r.pct >= 60 ? '🟡' : '🟠';
+                let posEmoji = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}º`;
+                html += `
+                    <div class="scanner-row">
+                        <div class="scanner-pos">${posEmoji}</div>
+                        <div class="scanner-cenario-name">
+                            ${r.nome}
+                            <small>${r.desc}</small>
+                        </div>
+                        <div class="scanner-detail">
+                            ${r.greens}/${r.aptos} greens
+                            <br><span class="confidence-badge ${r.confianca.classe}" style="font-size:10px;">${r.confianca.label}</span>
+                        </div>
+                        <div class="scanner-pct" style="color:${r.pct >= 70 ? '#00B37E' : '#FBA94C'}">${emoji} ${r.pct}%</div>
+                    </div>
+                `;
+            });
+        }
+
+        if (abaixoLimiar.length > 0) {
+            html += `<div class="scanner-divider">⚠️ ABAIXO DO LIMIAR (<${limiar}%)</div>`;
+            abaixoLimiar.forEach(r => {
+                html += `
+                    <div class="scanner-row" style="opacity:0.6;">
+                        <div class="scanner-pos">—</div>
+                        <div class="scanner-cenario-name">
+                            ${r.nome}
+                            <small>${r.desc}</small>
+                        </div>
+                        <div class="scanner-detail">${r.greens}/${r.aptos} greens</div>
+                        <div class="scanner-pct" style="color:#f75a68;">🔴 ${r.pct}%</div>
+                    </div>
+                `;
+            });
+        }
+
+        if (semDados.length > 0) {
+            html += `<div class="scanner-divider">📭 SEM DADOS NO HISTÓRICO</div>`;
+            semDados.forEach(r => {
+                html += `
+                    <div class="scanner-row" style="opacity:0.4;">
+                        <div class="scanner-pos">—</div>
+                        <div class="scanner-cenario-name">
+                            ${r.nome}
+                            <small>${r.desc}</small>
+                        </div>
+                        <div class="scanner-detail">0 jogos aptos</div>
+                        <div class="scanner-pct" style="color:#7c7c8a;">N/A</div>
+                    </div>
+                `;
+            });
+        }
+
+        document.getElementById('scannerRanking').innerHTML = html;
+        document.getElementById('scannerResult').style.display = 'block';
+
+        // 6. Montar mensagem Telegram do Scanner
+        ultimoRelatorioScanner = montarMensagemTelegramScanner(mainTeamName, mando, matchTitle, matchDate, acimaLimiar, abaixoLimiar, semDados, limiar);
+        if (acimaLimiar.length > 0) {
+            document.getElementById('btnTelegramScanner').style.display = 'inline-block';
+            document.getElementById('btnTelegramScanner').innerText = '📲 Enviar Scanner para Telegram';
+            document.getElementById('btnTelegramScanner').disabled = false;
+        }
+
+        // 7. Salvar no histórico
+        await salvarHistorico({
+            tipo: 'scanner',
+            data: new Date().toLocaleDateString('pt-BR'),
+            dataCompleta: new Date().toISOString(),
+            cenario: `Scanner: ${matchTitle}`,
+            mando,
+            limiar,
+            media: acimaLimiar.length > 0 ? Math.round(acimaLimiar.reduce((s, r) => s + r.pct, 0) / acimaLimiar.length) : 0,
+            qtdBons: acimaLimiar.length,
+            qtdAnalisados: TODOS_CENARIOS.length,
+            jogos: acimaLimiar.map(r => ({ cenario: r.nome, pct: r.pct, greens: r.greens, aptos: r.aptos }))
+        });
+
+        document.getElementById('scannerProgBar').style.width = '100%';
+        document.getElementById('scannerStatusText').innerText = `✅ Concluído! ${acimaLimiar.length} cenários acima de ${limiar}% | Cache: ${cacheHitsSession} hits / ${cacheMissesSession} misses`;
+
+    } catch (e) {
+        document.getElementById('scannerStatusText').innerText = `❌ Erro: ${e.message}`;
+        document.getElementById('scannerProgBar').style.width = '100%';
+        document.getElementById('scannerProgBar').style.background = '#f75a68';
+    }
+
+    document.getElementById('btnScanner').disabled = false;
+}
+
+function montarMensagemTelegramScanner(teamName, mando, matchTitle, matchDate, bons, ruins, semDados, limiar) {
+    let mandoLabel = mando === 'home' ? '🏠 Casa' : '✈️ Fora';
+    let msg = '';
+    msg += '━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+    msg += '🔍 <b>Scanner de Cenários</b>\n';
+    msg += '━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    msg += `⚽ <b>${teamName}</b> (${mandoLabel})\n`;
+    msg += `📋 ${matchTitle}\n`;
+    msg += `📅 ${matchDate}\n`;
+    msg += `📊 Limiar: ${limiar}%\n\n`;
+
+    if (bons.length > 0) {
+        msg += `<b>✅ RECOMENDADOS (${bons.length})</b>\n\n`;
+        bons.forEach((r, idx) => {
+            let emoji = r.pct >= 80 ? '🟢' : r.pct >= 60 ? '🟡' : '🟠';
+            let medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}º`;
+            msg += `${medal} ${emoji} <b>${r.nome}</b> — <b>${r.pct}%</b> (${r.greens}/${r.aptos})\n`;
+            msg += `     <i>${r.desc}</i>\n\n`;
+        });
+    }
+
+    if (ruins.length > 0) {
+        msg += `<b>⚠️ ABAIXO DO LIMIAR (${ruins.length})</b>\n`;
+        ruins.forEach(r => {
+            msg += `🔴 ${r.nome} — ${r.pct}% (${r.greens}/${r.aptos})\n`;
+        });
+        msg += '\n';
+    }
+
+    if (semDados.length > 0) {
+        msg += `<b>📭 SEM DADOS (${semDados.length})</b>\n`;
+        semDados.forEach(r => { msg += `  ◽ ${r.nome}\n`; });
+        msg += '\n';
+    }
+
+    msg += '⏰ ' + new Date().toLocaleString('pt-BR');
+    return msg;
+}
+
+async function enviarTelegramScanner() {
+    if (!ultimoRelatorioScanner) { alert('Nenhum relatório.'); return; }
+    let btn = document.getElementById('btnTelegramScanner');
+    let status = document.getElementById('telegramStatusScanner');
+    btn.disabled = true;
+    btn.innerText = '⏳ Enviando...';
+    status.style.display = 'block';
+    status.innerText = 'Enviando...';
+    status.style.color = '#a8a8b3';
+
+    try {
+        let res = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: TG_CHAT_ID, text: ultimoRelatorioScanner, parse_mode: 'HTML', disable_web_page_preview: true })
+        });
+        let data = await res.json();
+        if (data.ok) {
+            status.innerText = '✅ Enviado com sucesso!';
+            status.style.color = '#00B37E';
+            btn.innerText = '✅ Enviado!';
+        } else throw new Error(data.description || 'Erro');
+    } catch (e) {
+        status.innerText = '❌ Erro: ' + e.message;
+        status.style.color = '#f75a68';
+        btn.innerText = '📲 Tentar Novamente';
+        btn.disabled = false;
+    }
+}
+
+// ========================================
+// TELEGRAM (ANÁLISE NORMAL)
+// ========================================
+function montarMensagemTelegram(bons, totalAnalisados, limiar, cenarioTexto) {
+    let mediaPct = Math.round(bons.reduce((sum, r) => sum + r.pct, 0) / bons.length);
+    let msg = '';
+    msg += '━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+    msg += '🎯 <b>Resumo dos Melhores Jogos</b>\n';
+    msg += '━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    msg += `📊 <b>Média: ${mediaPct}%</b>\n`;
+    msg += `✅ ${bons.length} jogos com ≥ ${limiar}% (entre ${totalAnalisados} analisados)\n`;
+    msg += `📋 Cenário: <i>${cenarioTexto}</i>\n\n`;
+
+    bons.forEach((r, idx) => {
+        let mandoLabel = r.mando === 'home' ? '🏠 Casa' : '✈️ Fora';
+        let emoji = r.pct >= 80 ? '🟢' : r.pct >= 60 ? '🟡' : '🔴';
+        let link = `https://cornerprobet.com/pt/analysis/game/${r.gameId}`;
+        let conf = r.confianca ? ` | ${r.confianca.label}` : '';
+        msg += `┌─────────────────────────\n`;
+        msg += `│ ${emoji} <b>${r.baseTitle}</b>\n`;
+        msg += `│ 📅 ${r.baseDate}\n`;
+        msg += `│ 📈 <b>${r.pct}%</b> — ${r.greens}/${r.aptos} Greens${conf}\n`;
+        msg += `│ ⚽ Time: <b>${r.mainTeamName}</b> (${mandoLabel})\n`;
+        msg += `│ 🔗 <a href="${link}">Abrir Jogo Base</a>\n`;
+        msg += `└─────────────────────────\n`;
+        if (idx < bons.length - 1) msg += '\n';
+    });
+    msg += '\n⏰ ' + new Date().toLocaleString('pt-BR');
+    return msg;
+}
+
+async function enviarTelegram() {
+    if (!ultimoRelatorio) { alert('Nenhum relatório.'); return; }
+    let btn = document.getElementById('btnTelegram');
+    let status = document.getElementById('telegramStatus');
+    btn.disabled = true;
+    btn.innerText = '⏳ Enviando...';
+    status.style.display = 'block';
+    status.innerText = 'Enviando...';
+    status.style.color = '#a8a8b3';
+
+    try {
+        let res = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: TG_CHAT_ID, text: ultimoRelatorio, parse_mode: 'HTML', disable_web_page_preview: true })
+        });
+        let data = await res.json();
+        if (data.ok) {
+            status.innerText = '✅ Enviado com sucesso!';
+            status.style.color = '#00B37E';
+            btn.innerText = '✅ Enviado!';
+        } else throw new Error(data.description || 'Erro');
+    } catch (e) {
+        status.innerText = '❌ Erro: ' + e.message;
+        status.style.color = '#f75a68';
+        btn.innerText = '📲 Tentar Novamente';
+        btn.disabled = false;
+    }
+}
+
+// ========================================
+// ANÁLISE TOP 5
+// ========================================
+async function analisarTop5() {
+    let ids = [
+        document.getElementById('id1').value.trim(),
+        document.getElementById('id2').value.trim(),
+        document.getElementById('id3').value.trim(),
+        document.getElementById('id4').value.trim(),
+        document.getElementById('id5').value.trim()
+    ].filter(x => x !== "");
+
+    if (ids.length === 0) { alert("Digite pelo menos 1 ID."); return; }
+
+    let limiar = parseInt(document.getElementById('limiarInput').value) || 0;
+    let mando = document.getElementById('mandoSelect').value;
+    let cenario = document.getElementById('cenarioSelect').value;
+
+    document.getElementById('btnBuscar').disabled = true;
+    document.getElementById('progContainer').style.display = 'block';
+    document.getElementById('statusText').innerText = "Analisando em paralelo...";
+    document.getElementById('progBar').style.width = '30%';
+    document.getElementById('resultadoContainer').style.display = 'none';
+    document.getElementById('btnTelegram').style.display = 'none';
+    document.getElementById('telegramStatus').style.display = 'none';
+    ultimoRelatorio = null;
+
+    let resultados = await Promise.all(ids.map(id => analisarJogo(id, mando, cenario)));
+
+    document.getElementById('progBar').style.width = '90%';
+
+    let bons = resultados.filter(r => r.ok && r.aptos > 0 && r.pct >= limiar);
+    bons.sort((a, b) => b.pct - a.pct);
+
+    let matchList = document.getElementById('matchList');
+    matchList.innerHTML = "";
+    let cenarioTexto = document.getElementById('cenarioSelect').options[document.getElementById('cenarioSelect').selectedIndex].text;
+
+    if (bons.length === 0) {
+        matchList.innerHTML = `<p style='color:#7c7c8a; font-size:13px;'>Nenhum dos jogos atingiu ${limiar}%+ nesse cenário.</p>`;
+        document.getElementById('resPct').innerText = "0%";
+        document.getElementById('resFractions').innerText = `0 jogos com ≥ ${limiar}%`;
+    } else {
+        let mediaPct = Math.round(bons.reduce((sum, r) => sum + r.pct, 0) / bons.length);
+        document.getElementById('resPct').innerText = mediaPct + "%";
+        document.getElementById('resFractions').innerText = `${bons.length} jogos com ≥ ${limiar}% (entre ${ids.length} analisados)`;
+
+        bons.forEach(r => {
+            let conf = getConfianca(r.aptos);
+            let div = document.createElement('div');
+            div.className = "match-item";
+            div.innerHTML = `
+                <div class="match-header">
+                    <div class="match-title">${r.baseTitle} <span style="color:#a8a8b3; font-weight:400;">(${r.baseDate})</span></div>
+                    <span class="tag-badge">${r.pct}% | ${r.greens}/${r.aptos} Greens</span>
+                    <span class="confidence-badge ${conf.classe}">${conf.label} (${r.aptos} aptos)</span>
+                    <button class="btn-link" onclick="window.open('https://cornerprobet.com/pt/analysis/game/${r.gameId}','_blank')">Abrir Jogo Base</button>
+                </div>
+                <div class="result-line">
+                    Time: <b>${r.mainTeamName}</b> (${r.mando === 'home' ? 'Casa' : 'Visitante'}) – Cenário: <span style="color:#38bdf8;">${cenarioTexto}</span>
+                </div>
+            `;
+            matchList.appendChild(div);
+        });
+
+        ultimoRelatorio = montarMensagemTelegram(bons, ids.length, limiar, cenarioTexto);
+        document.getElementById('btnTelegram').style.display = 'inline-block';
+        document.getElementById('btnTelegram').innerText = '📲 Enviar para Telegram';
+        document.getElementById('btnTelegram').disabled = false;
+    }
+
+    await salvarHistorico({
+        tipo: 'analise',
+        data: new Date().toLocaleDateString('pt-BR'),
+        dataCompleta: new Date().toISOString(),
+        cenario: cenarioTexto,
+        mando, limiar,
+        media: bons.length > 0 ? Math.round(bons.reduce((s, r) => s + r.pct, 0) / bons.length) : 0,
+        qtdBons: bons.length,
+        qtdAnalisados: ids.length,
+        jogos: bons.map(r => ({ team: r.mainTeamName, pct: r.pct, gameId: r.gameId, greens: r.greens, aptos: r.aptos }))
+    });
+
+    document.getElementById('statusText').innerText = `✅ Concluído! Cache: ${cacheHitsSession} hits / ${cacheMissesSession} misses`;
+    document.getElementById('progBar').style.width = '100%';
+    document.getElementById('resultadoContainer').style.display = 'block';
+    document.getElementById('btnBuscar').disabled = false;
+}
+
+// Init
+abrirDB().then(() => console.log('IndexedDB pronto!')).catch(e => console.error('Erro IndexedDB:', e));
+</script>
+</body>
+</html>
