@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscador de Contexto PRO</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+body {font-family:'Inter',sans-serif; background:#121214; color:#fff; padding:20px; margin:0;}
+.container {max-width:800px; margin:0 auto;}
+.card {background:#202024; padding:20px; border-radius:12px; border:1px solid #323238; margin-bottom:20px;}
+h1 {font-size:1.4rem; color:#00875f; margin-top:0; display:flex; align-items:center; gap:10px;}
+
+.input-group {display:flex; flex-direction:column; gap:12px; margin-top:15px;}
+.row-flex {display:flex; gap:10px; flex-wrap:wrap;}
+
+input[type=text] {flex:1; min-width:150px; background:#121214; color:#fff; border:1px solid #323238; padding:12px 15px; border-radius:8px; font-size:15px; outline:none;}
+input[type=text]:focus {border-color:#00875f;}
+
+select {background:#1c1c1f; color:#fff; border:1px solid #323238; padding:12px 15px; border-radius:8px; font-size:14px; outline:none; font-family:'Inter',sans-serif; min-width:200px;}
+select:focus {border-color:#00875f;}
+.sel-mando {flex:0.5;}
+.sel-cenario {flex:2;}
+
+button {background:#00875f; color:#fff; border:none; padding:12px 25px; border-radius:8px; cursor:pointer; font-weight:600; font-size:15px; transition:background 0.2s; flex:1;}
+button:hover {background:#015f43;}
+button:disabled {background:#323238; color:#7c7c8a; cursor:not-allowed;}
+
+.progress-bar-container {width:100%; height:8px; background:#323238; border-radius:4px; margin-top:15px; overflow:hidden; display:none;}
+.progress-bar {height:100%; background:#38bdf8; width:0%; transition:width 0.3s;}
+.status-text {font-size:13px; color:#a8a8b3; margin-top:8px; text-align:center; font-weight:500;}
+
+/* Resultados */
+.res-container {display:none;}
+.summary-box {background:#1c1c1f; border:1px solid #00875f; padding:20px; border-radius:10px; text-align:center; margin-bottom:20px;}
+.summary-title {font-size:1.1rem; font-weight:600; color:#fff; margin-bottom:10px;}
+.big-number {font-size:2.5rem; font-weight:700; color:#00875f;}
+.small-desc {font-size:14px; color:#a8a8b3; margin-top:5px;}
+
+.match-list {display:flex; flex-direction:column; gap:10px;}
+.match-item {background:#1c1c1f; border:1px solid #323238; padding:15px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;}
+.match-item.match-green {border-left:4px solid #00875f;}
+.match-item.match-red {border-left:4px solid #E25C5C;}
+.match-item.match-neutral {border-left:4px solid #7c7c8a; opacity:0.6;}
+
+.team-names {font-weight:600; font-size:14px; width:100%; margin-bottom:5px;}
+.event-tags {display:flex; gap:8px; flex-wrap:wrap;}
+.tag {padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700; display:inline-flex; align-items:center;}
+.tag-goal {background:rgba(226,92,92,0.15); color:#E25C5C; border:1px solid rgba(226,92,92,0.3);}
+.tag-draw {background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.3);}
+.tag-corner {background:rgba(0,135,95,0.15); color:#00875f; border:1px solid rgba(0,135,95,0.3);}
+.tag-redcard {background:#E25C5C; color:#fff; border:1px solid #c54242;}
+.tag-none {background:#323238; color:#a8a8b3;}
+.btn-link {background:transparent; border:1px solid #38bdf8; color:#38bdf8; padding:4px 10px; font-size:11px; margin-left:auto; border-radius:6px; cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+    <h1>🎯 Buscador de Contexto (Motor PRO)</h1>
+    
+    <div class="input-group">
+      <div class="row-flex">
+        <input type="text" id="gameIdInput" placeholder="Cole o ID da partida (Ex: rnf6g)">
+        <select id="mandoSelect" class="sel-mando">
+          <option value="home">Analisar Time da CASA</option>
+          <option value="away">Analisar Time de FORA</option>
+        </select>
+      </div>
+      <div class="row-flex">
+        <select id="cenarioSelect" class="sel-cenario">
+          <option value="derrota_ht">Pressão 1ºT: Perdendo antes dos 36' -> Sair Canto Total (37'-HT)</option>
+          <option value="empate_ht">Pressão 1ºT: Empatado no min 36' -> Sair Canto Total (37'-HT)</option>
+          <option value="derrota_2t">Pressão 2ºT: Terminou HT Perdendo -> Sair 5+ Cantos Totais no 2ºT</option>
+          <option value="pressao_70">Pressão Final (70+): Perdendo/Empatado aos 69' -> Sair 3+ Cantos Totais até o fim</option>
+          <option value="pressao_80">Pressão Final (80+): Perdendo/Empatado aos 79' -> Sair 2+ Cantos Totais até o fim</option>
+          <option value="retranca">Jogo Aberto 2ºT: Terminou HT Ganhando -> Sair 5+ Cantos Totais no 2ºT</option>
+          <option value="reacao_imediata">Reação Imediata: Gol -> Sair 2+ Cantos Totais nos 10 min seguintes</option>
+          <option value="cartao_vermelho">Fator Cartão Vermelho: Expulsão -> Sair 3+ Cantos Totais após o Cartão</option>
+        </select>
+        <button id="btnBuscar" onclick="iniciarBusca()">🔍 Analisar</button>
+      </div>
+    </div>
+
+    <div class="progress-bar-container" id="progContainer">
+      <div class="progress-bar" id="progBar"></div>
+    </div>
+    <div class="status-text" id="statusText"></div>
+  </div>
+
+  <div id="resultadoContainer" class="res-container">
+    <div class="summary-box">
+      <div class="summary-title" id="resTeamName">Time</div>
+      <div class="small-desc" id="resDescCenario">Cenário Analisado</div>
+      <div class="big-number" id="resPct">0%</div>
+      <div class="small-desc" id="resFractions">0 de 0 jogos</div>
+    </div>
+    <h2 style="font-size:16px; margin-bottom:15px;">Histórico Detalhado:</h2>
+    <div class="match-list" id="matchList"></div>
+  </div>
+</div>
+
+<script>
+const MYTOKEN = '45003_ec8357116e';
+
+function formatMinute(t) {
+    if (!t) return -1;
+    let s = String(t).trim();
+    if (s.indexOf('45+') === 0) return 45;
+    if (s.indexOf('90+') === 0) return 90;
+    return parseInt(s) || -1;
+}
+
+function isFirstHalfEvent(t) {
+    if (!t) return false;
+    let s = String(t).trim();
+    if (s.indexOf('45+') === 0) return true;
+    let m = parseInt(s) || 0;
+    return m <= 45;
+}
+
+async function iniciarBusca() {
+    let input = document.getElementById('gameIdInput').value.trim();
+    let mando = document.getElementById('mandoSelect').value;
+    let cenario = document.getElementById('cenarioSelect').value;
+    
+    if(!input) { alert("Digite um ID!"); return; }
+
+    document.getElementById('btnBuscar').disabled = true;
+    document.getElementById('progContainer').style.display = 'block';
+    document.getElementById('resultadoContainer').style.display = 'none';
+    let matchHtml = '';
+    
+    let totalAptos = 0;
+    let totalGreens = 0;
+
+    function atualizarStatus(msg, pct) {
+        document.getElementById('statusText').innerText = msg;
+        document.getElementById('progBar').style.width = pct + '%';
+    }
+
+    try {
+        atualizarStatus("Buscando time base...", 10);
+        let resBase = await fetch(`https://cornerprobet.com/api/v3/getAnalysis.php?gameId=${input}&token=${MYTOKEN}&games=20`);
+        let dataBase = await resBase.json();
+
+        let historicoTime = mando === 'home' ? dataBase.lastGames.home.asHome : dataBase.lastGames.away.asAway;
+        let mainTeamName = mando === 'home' ? dataBase.game.homeName : dataBase.game.awayName;
+
+        if(!historicoTime || historicoTime.length === 0) {
+            throw new Error(`Sem histórico para o time selecionado (${mando}).`);
+        }
+        
+        document.getElementById('resTeamName').innerText = mainTeamName + (mando==='home' ? ' (Casa)' : ' (Visitante)');
+        
+        let txtCenario = document.getElementById("cenarioSelect").options[document.getElementById("cenarioSelect").selectedIndex].text;
+        document.getElementById('resDescCenario').innerText = txtCenario;
+
+        let idsParaAnalisar = historicoTime.map(g => g.id).filter(id => id);
+        if(idsParaAnalisar.length === 0) throw new Error("IDs não encontrados.");
+
+        for(let i=0; i<idsParaAnalisar.length; i++) {
+            let histId = idsParaAnalisar[i];
+            let prog = 20 + Math.round((i / idsParaAnalisar.length) * 80);
+            atualizarStatus(`Analisando Jogo ${i+1}/${idsParaAnalisar.length}...`, prog);
+
+            try {
+                let resHist = await fetch(`https://cornerprobet.com/api/v3/getAnalysis.php?gameId=${histId}&token=${MYTOKEN}`);
+                let dataHist = await resHist.json();
+                let game = dataHist.game;
+                if(!game || !game.eventsClean) continue; 
+
+                let isMeuTimeHome = (game.homeName === mainTeamName); 
+                
+                let meuPlacar = 0, advPlacar = 0;
+                let meuPlacarHT = 0, advPlacarHT = 0;
+                let meuPlacarM36 = 0, advPlacarM36 = 0;
+                let meuPlacarM69 = 0, advPlacarM69 = 0;
+                let meuPlacarM79 = 0, advPlacarM79 = 0;
+
+                let sofreuGolCedo = false; let minGolCedo = -1;
+                
+                let cantosTotais37 = []; 
+                let cantosTotais2T = 0;
+                let cantosTotais70 = [];
+                let cantosTotais80 = [];
+                
+                // Variáveis Novas: Reação Imediata e Cartão Vermelho
+                let minPrimeiroGol = -1;
+                let cantosPosGol = [];
+                let minCartaoVermelho = -1;
+                let cantosPosVermelho = 0;
+
+                let events = game.eventsClean.sort((a,b) => formatMinute(a.t) - formatMinute(b.t));
+
+                for(let e of events) {
+                    let min = formatMinute(e.t);
+                    if(min === -1) continue; 
+                    let is1T = isFirstHalfEvent(e.t);
+
+                    // Processar Gols
+                    if(e.tp === 'g' || e.tp === 'p' || e.tp === 'og') { 
+                        if(e.h === 'h') isMeuTimeHome ? meuPlacar++ : advPlacar++;
+                        if(e.h === 'a') isMeuTimeHome ? advPlacar++ : meuPlacar++;
+                        
+                        if(is1T) {
+                            meuPlacarHT = meuPlacar; advPlacarHT = advPlacar;
+                            if(advPlacar > meuPlacar && min <= 35 && !sofreuGolCedo) {
+                                sofreuGolCedo = true; minGolCedo = min;
+                            }
+                        }
+                        
+                        // Grava o minuto do 1º Gol do jogo (Reação Imediata)
+                        if(minPrimeiroGol === -1) minPrimeiroGol = min;
+                    }
+
+                    // Processar Cartões Vermelhos ('rc' = red card, 'yr' = yellow red)
+                    if(e.tp === 'rc' || e.tp === 'yr') {
+                        if(minCartaoVermelho === -1) minCartaoVermelho = min;
+                    }
+
+                    // Fotografar Placares
+                    if(min <= 36 && is1T) { meuPlacarM36 = meuPlacar; advPlacarM36 = advPlacar; }
+                    if(min <= 69 && !is1T) { meuPlacarM69 = meuPlacar; advPlacarM69 = advPlacar; }
+                    if(min <= 79 && !is1T) { meuPlacarM79 = meuPlacar; advPlacarM79 = advPlacar; }
+
+                    // Processar Escanteios Totais
+                    if(e.tp === 'c') {
+                        if(is1T) {
+                            if(min >= 37) cantosTotais37.push(e.t); 
+                        } else {
+                            cantosTotais2T++;
+                            if(min >= 70) cantosTotais70.push(e.t); 
+                            if(min >= 80) cantosTotais80.push(e.t); 
+                        }
+                        
+                        // Conta para a Reação Imediata (Cantos nos 10 mins pós primeiro gol)
+                        if(minPrimeiroGol !== -1 && min >= minPrimeiroGol && min <= (minPrimeiroGol + 10)) {
+                            cantosPosGol.push(e.t);
+                        }
+                        
+                        // Conta para o Cartão Vermelho (Cantos totais depois da expulsão)
+                        if(minCartaoVermelho !== -1 && min >= minCartaoVermelho) {
+                            cantosPosVermelho++;
+                        }
+                    }
+                }
+
+                // Validar Cenários
+                let entrouNoCenario = false;
+                let green = false;
+                let tagCenario = ""; let tagCanto = "";
+
+                if(cenario === 'derrota_ht' && sofreuGolCedo) {
+                    entrouNoCenario = true; green = cantosTotais37.length > 0;
+                    tagCenario = `<span class="tag tag-goal">Sofreu Gol (Min ${minGolCedo}')</span>`;
+                    tagCanto = green ? `<span class="tag tag-corner">✅ ${cantosTotais37.length} Canto(s) Totais (37-HT)</span>` : `<span class="tag tag-goal" style="background:#4a4a52; color:#fff;">❌ Zero Cantos (37-HT)</span>`;
+                } 
+                else if (cenario === 'empate_ht' && (meuPlacarM36 === advPlacarM36)) {
+                    entrouNoCenario = true; green = cantosTotais37.length > 0;
+                    tagCenario = `<span class="tag tag-draw">Empate 36' (${meuPlacarM36}x${advPlacarM36})</span>`;
+                    tagCanto = green ? `<span class="tag tag-corner">✅ ${cantosTotais37.length} Canto(s) Totais (37-HT)</span>` : `<span class="tag tag-goal" style="background:#4a4a52; color:#fff;">❌ Zero Cantos (37-HT)</span>`;
+                }
+                else if (cenario === 'derrota_2t' && (advPlacarHT > meuPlacarHT)) {
+                    entrouNoCenario = true; green = cantosTotais2T >= 5;
+                    tagCenario = `<span class="tag tag-goal">Perdendo no HT (${meuPlacarHT}x${advPlacarHT})</span>`;
+                    tagCanto = green ? `<span class="tag tag-corner">✅ ${cantosTotais2T} Cantos Totais 2ºT</span>` : `<span class="tag tag-goal" style="background:#4a4a52; color:#fff;">❌ Só ${cantosTotais2T} Cantos Totais</span>`;
+                }
+                else if (cenario === 'pressao_70' && (advPlacarM69 >= meuPlacarM69)) { 
+                    entrouNoCenario = true; green = cantosTotais70.length >= 3;
+                    let descPlacar = advPlacarM69 > meuPlacarM69 ? "Perdendo" : "Empatado";
+                    tagCenario = `<span class="tag tag-draw">${descPlacar} aos 69' (${meuPlacarM69}x${advPlacarM69})</span>`;
+                    tagCanto = green ? `<span class="tag tag-corner">✅ ${cantosTotais70.length} Canto(s) Finais (70+)</span>` : `<span class="tag tag-goal" style="background:#4a4a52; color:#fff;">❌ Só ${cantosTotais70.length} Canto(s)</span>`;
+                }
+                else if (cenario === 'pressao_80' && (advPlacarM79 >= meuPlacarM79)) { 
+                    entrouNoCenario = true; green = cantosTotais80.length >= 2;
+                    let descPlacar = advPlacarM79 > meuPlacarM79 ? "Perdendo" : "Empatado";
+                    tagCenario = `<span class="tag tag-draw">${descPlacar} aos 79' (${meuPlacarM79}x${advPlacarM79})</span>`;
+                    tagCanto = green ? `<span class="tag tag-corner">✅ ${cantosTotais80.length} Canto(s) Finais (80+)</span>` : `<span class="tag tag-goal" style="background:#4a4a52; color:#fff;">❌ Só ${cantosTotais80.length} Canto(s)</span>`;
+                }
+                else if (cenario === 'retranca' && (meuPlacarHT > advPlacarHT)) {
+                    entrouNoCenario = true; green = cantosTotais2T >= 5; 
+                    tagCenario = `<span class="tag tag-corner" style="background:rgba(56,189,248,0.15); color:#38bdf8;">Ganhando HT (${meuPlacarHT}x${advPlacarHT})</span>`;
+                    tagCanto = green ? `<span class="tag tag-goal">✅ ${cantosTotais2T} Cantos Totais no 2ºT</span>` : `<span class="tag tag-goal" style="background:#4a4a52; color:#fff;">❌ Só ${cantosTotais2T} Cantos no 2ºT</span>`;
+                }
+                // NOVO: G - Reação Imediata (10 mins após o gol)
+                else if (cenario === 'reacao_imediata' && minPrimeiroGol !== -1) {
+                    entrouNoCenario = true; green = cantosPosGol.length >= 2;
+                    tagCenario = `<span class="tag tag-goal">1º Gol (Min ${minPrimeiroGol}')</span>`;
+                    tagCanto = green ? `<span class="tag tag-corner">✅ ${cantosPosGol.length} Cantos nos 10m seguintes</span>` : `<span class="tag tag-goal" style="background:#4a4a52; color:#fff;">❌ Só ${cantosPosGol.length} Canto(s)</span>`;
+                }
+                // NOVO: H - Fator Cartão Vermelho
+                else if (cenario === 'cartao_vermelho' && minCartaoVermelho !== -1) {
+                    entrouNoCenario = true; green = cantosPosVermelho >= 3;
+                    tagCenario = `<span class="tag tag-redcard">Cartão Vermelho (Min ${minCartaoVermelho}')</span>`;
+                    tagCanto = green ? `<span class="tag tag-corner">✅ ${cantosPosVermelho} Cantos totais pós-expulsão</span>` : `<span class="tag tag-goal" style="background:#4a4a52; color:#fff;">❌ Só ${cantosPosVermelho} Canto(s)</span>`;
+                }
+
+                // Renderiza HTML
+                let matchDate = game.date || game.gamedate || "";
+                let matchTitle = `${game.homeName} ${game.score} ${game.awayName}`;
+
+                if(entrouNoCenario) {
+                    totalAptos++; if(green) totalGreens++;
+                    matchHtml += `
+                    <div class="match-item ${green ? 'match-green' : 'match-red'}">
+                        <div class="team-names">${matchTitle} <span style="font-weight:400; color:#a8a8b3;">(${matchDate})</span></div>
+                        <div class="event-tags">${tagCenario} ${tagCanto}</div>
+                        <button class="btn-link" onclick="window.open('https://cornerprobet.com/pt/analysis/game/${histId}', '_blank')">Link</button>
+                    </div>`;
+                } else {
+                    matchHtml += `<div class="match-item match-neutral" style="display:none;"></div>`; 
+                }
+
+            } catch(err) {}
+        }
+
+        let pctFinal = totalAptos > 0 ? Math.round((totalGreens / totalAptos) * 100) : 0;
+        document.getElementById('resPct').innerText = pctFinal + '%';
+        if(pctFinal >= 70) document.getElementById('resPct').style.color = '#00875f';
+        else if (pctFinal >= 50) document.getElementById('resPct').style.color = '#F5A623';
+        else document.getElementById('resPct').style.color = '#E25C5C';
+
+        document.getElementById('resFractions').innerText = `${totalGreens} Verdes em ${totalAptos} jogos aptos`;
+        document.getElementById('matchList').innerHTML = matchHtml || "<p style='text-align:center;color:#7c7c8a;margin-top:20px;'>Nenhum jogo antigo se encaixou neste cenário.</p>";
+        
+        atualizarStatus("✅ Concluído!", 100);
+        document.getElementById('resultadoContainer').style.display = 'block';
+
+    } catch (e) {
+        atualizarStatus("❌ Erro: " + e.message, 0);
+    }
+    document.getElementById('btnBuscar').disabled = false;
+}
+</script>
+</body>
+</html>
