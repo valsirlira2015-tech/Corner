@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscador de Contexto - Top 5</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+body{font-family:'Inter',sans-serif;background:#121214;color:#fff;padding:20px;margin:0}
+.container{max-width:900px;margin:0 auto}
+.card{background:#202024;padding:20px;border-radius:12px;border:1px solid #323238;margin-bottom:20px}
+h1{font-size:1.4rem;color:#00875f;margin-top:0;display:flex;align-items:center;gap:10px}
+h2{font-size:1.1rem;margin:15px 0 10px}
+.row-flex{display:flex;gap:10px;flex-wrap:wrap}
+.input-small{flex:1;min-width:120px;background:#121214;color:#fff;border:1px solid #323238;padding:10px 12px;border-radius:8px;font-size:14px;outline:none}
+.input-small:focus{border-color:#00875f}
+select{background:#1c1c1f;color:#fff;border:1px solid #323238;padding:10px 12px;border-radius:8px;font-size:13px;outline:none;font-family:'Inter',sans-serif;min-width:200px}
+button{background:#00875f;color:#fff;border:none;padding:12px 22px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;transition:background .2s}
+button:hover{background:#015f43}
+button:disabled{background:#323238;color:#7c7c8a;cursor:not-allowed}
+.btn-secondary{background:#1c1c1f;border:1px solid #323238;color:#e1e1e6;margin-top:10px}
+.btn-secondary:hover{background:#29292e;border-color:#00875f}
+.btn-scanner{background:#7c3aed}
+.btn-scanner:hover{background:#5b21b6}
+.btn-telegram{background:#0088cc;color:#fff;border:none;padding:12px 22px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;display:none;margin-top:10px}
+.btn-telegram:disabled{background:#323238;color:#7c7c8a}
+.telegram-status{font-size:13px;color:#a8a8b3;margin-top:6px;display:none}
+.progress-bar-container{width:100%;height:8px;background:#323238;border-radius:4px;margin-top:15px;overflow:hidden;display:none}
+.progress-bar{height:100%;background:#38bdf8;width:0%;transition:width .3s}
+.status-text{font-size:13px;color:#a8a8b3;margin-top:8px;text-align:center;font-weight:500}
+.res-container{display:none}
+.summary-box{background:#1c1c1f;border:1px solid #00875f;padding:16px;border-radius:10px;text-align:center;margin-bottom:20px}
+.summary-title{font-size:1rem;font-weight:600;margin-bottom:6px}
+.big-number{font-size:2rem;font-weight:700;color:#00875f}
+.small-desc{font-size:13px;color:#a8a8b3;margin-top:4px}
+.match-list{display:flex;flex-direction:column;gap:10px}
+.match-item{background:#1c1c1f;border:1px solid #323238;padding:15px;border-radius:8px;display:flex;flex-direction:column;gap:6px}
+.match-header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.match-title{font-weight:600;font-size:14px}
+.tag-badge{background:#00875f22;color:#00B37E;border:1px solid #00875f55;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.confidence-badge{padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.confidence-alta{background:#00875f22;color:#00B37E;border:1px solid #00875f55}
+.confidence-media{background:#c4760022;color:#FBA94C;border:1px solid #c4760055}
+.confidence-baixa{background:#f7345822;color:#f75a68;border:1px solid #f7345855}
+.result-line{font-size:13px;color:#e1e1e6}
+.btn-link{background:transparent;border:1px solid #38bdf8;color:#38bdf8;padding:4px 10px;font-size:11px;border-radius:6px;cursor:pointer}
+.label-inline{font-size:12px;color:#a8a8b3;display:flex;align-items:center;gap:6px}
+.input-limiar{width:70px;text-align:center}
+.forca-box{background:#121214;border:1px solid #323238;border-radius:8px;padding:10px 12px;margin-top:8px}
+.forca-title{font-size:11px;color:#a8a8b3;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.forca-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:600px){.forca-grid{grid-template-columns:1fr}}
+.forca-col-title{font-size:10px;color:#7c7c8a;font-weight:600;text-transform:uppercase;margin-bottom:4px;letter-spacing:.5px}
+.forca-row{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;border-radius:4px;font-size:12px}
+.forca-row .forca-label{color:#a8a8b3}
+.forca-row .forca-value{font-weight:600}
+.forca-forte{background:#f7345811}
+.forca-medio{background:#c4760011}
+.forca-fraco{background:#00875f11}
+.forca-alert{font-size:11px;margin-top:6px;padding:6px 8px;border-radius:6px;font-weight:500}
+.forca-alert-danger{background:#f7345822;color:#f75a68;border:1px solid #f7345833}
+.forca-alert-ok{background:#00875f22;color:#00B37E;border:1px solid #00875f33}
+.perfil-banner{background:#1c1c1f;border:1px solid #f0883e55;border-radius:10px;padding:16px;margin-bottom:16px;display:none}
+.perfil-header{margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #323238}
+.perfil-header h3{margin:0;font-size:14px;color:#f0883e;display:flex;align-items:center;gap:8px}
+.perfil-header .perfil-match{font-size:12px;color:#a8a8b3;margin-top:4px}
+.perfil-ctx{background:#121214;border:1px solid #29292e;border-radius:8px;padding:12px;margin-bottom:10px}
+.perfil-ctx-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.perfil-ctx-team{font-size:13px;font-weight:700}
+.perfil-ctx-desc{font-size:11px;color:#a8a8b3;line-height:1.4}
+.perfil-ctx-tags{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.perfil-ctx-tag{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:600}
+.pct-forte{background:#f7345822;color:#f85149}
+.pct-medio{background:#c4760022;color:#FBA94C}
+.pct-fraco{background:#00875f22;color:#7ee787}
+.perfil-ctx-result{background:#1c1c1f;border:1px solid #323238;border-radius:8px;padding:12px;margin-top:8px}
+.perfil-ctx-big{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.perfil-ctx-media{font-size:1.5rem;font-weight:700}
+.perfil-ctx-pct{font-size:1.1rem;font-weight:700}
+.perfil-ctx-detail{font-size:11px;color:#7c7c8a;margin-top:6px}
+.perfil-ctx-nodata{font-size:12px;color:#7c7c8a;font-style:italic;text-align:center;padding:12px}
+.perfil-conclusao{padding:10px;border-radius:8px;font-size:12px;font-weight:600;text-align:center;margin-top:10px}
+.perfil-conclusao-good{background:#00875f22;color:#00B37E;border:1px solid #00875f55}
+.perfil-conclusao-warn{background:#c4760022;color:#FBA94C;border:1px solid #c4760055}
+.perfil-conclusao-bad{background:#f7345822;color:#f75a68;border:1px solid #f7345855}
+.perfil-footer{font-size:11px;color:#7c7c8a;margin-top:10px;text-align:center}
+.cache-info{display:flex;gap:15px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px;background:#1c1c1f;border-radius:8px;border:1px solid #323238}
+.cache-stat{font-size:12px;color:#a8a8b3}
+.cache-stat b{color:#00B37E}
+.hist-item{background:#1c1c1f;border:1px solid #323238;padding:12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.hist-info{font-size:13px;color:#e1e1e6}
+.hist-date{font-size:11px;color:#7c7c8a}
+.hist-pct{font-size:1.1rem;font-weight:700}
+.tabs{display:flex;gap:0;margin-bottom:20px}
+.tab-btn{flex:1;padding:12px;text-align:center;background:#1c1c1f;border:1px solid #323238;color:#a8a8b3;font-weight:600;font-size:13px;cursor:pointer;transition:all .2s}
+.tab-btn:first-child{border-radius:8px 0 0 8px}
+.tab-btn:last-child{border-radius:0 8px 8px 0}
+.tab-btn.active{background:#00875f;color:#fff;border-color:#00875f}
+.scanner-result{background:#1c1c1f;border-radius:10px;border:1px solid #323238;overflow:hidden;margin-top:15px;display:none}
+.scanner-header{background:#7c3aed22;border-bottom:1px solid #7c3aed55;padding:15px;text-align:center}
+.scanner-header h3{margin:0;color:#a78bfa;font-size:1rem}
+.scanner-header .scanner-team{font-size:1.2rem;font-weight:700;color:#fff;margin-top:4px}
+.scanner-header .scanner-match{font-size:13px;color:#a8a8b3;margin-top:2px}
+.scanner-header .scanner-info{font-size:12px;color:#7c7c8a;margin-top:6px;padding:6px 12px;background:#121214;border-radius:6px;display:inline-block}
+.scanner-ranking{padding:10px}
+.scanner-row{display:flex;align-items:center;gap:10px;padding:12px 10px;border-bottom:1px solid #29292e}
+.scanner-row:last-child{border-bottom:none}
+.scanner-row:hover{background:#29292e}
+.scanner-pos{font-size:1.1rem;font-weight:700;min-width:30px;text-align:center}
+.scanner-cenario-name{flex:1;font-size:13px;color:#e1e1e6;line-height:1.3}
+.scanner-cenario-name small{display:block;color:#7c7c8a;font-size:11px;margin-top:2px}
+.scanner-pct{font-size:1.1rem;font-weight:700;min-width:55px;text-align:right}
+.scanner-detail{font-size:11px;color:#a8a8b3;min-width:70px;text-align:right}
+.scanner-divider{padding:8px 10px;font-size:11px;color:#7c7c8a;background:#1a1a1e;font-weight:600;letter-spacing:1px}
+.scanner-group-header{padding:12px 10px;font-size:13px;font-weight:700;background:#202024;border-bottom:2px solid #323238;display:flex;align-items:center;gap:8px}
+.scanner-group-1t{color:#38bdf8}
+.scanner-group-2t{color:#a78bfa}
+.scanner-forca-inline{display:flex;gap:6px;flex-wrap:wrap;margin-top:3px}
+.scanner-forca-tag{font-size:10px;padding:1px 6px;border-radius:4px;font-weight:500}
+.sf-forte{background:#f7345822;color:#f75a68}
+.sf-medio{background:#c4760022;color:#FBA94C}
+.sf-fraco{background:#00875f22;color:#00B37E}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="tabs">
+    <div class="tab-btn active" onclick="switchTab('analise')">🎯 Análise</div>
+    <div class="tab-btn" onclick="switchTab('scanner')">🔍 Scanner</div>
+    <div class="tab-btn" onclick="switchTab('historico')">📊 Histórico</div>
+    <div class="tab-btn" onclick="switchTab('cache')">💾 Cache</div>
+  </div>
+  <div id="tabAnalise">
+    <div class="card">
+      <h1>🎯 Buscador de Contexto - Top 5</h1>
+      <p style="color:#a8a8b3;font-size:13px;line-height:1.5">Cole até <b>5 IDs</b>. Perfil contextual cruza posição + odd da partida atual.</p>
+      <h2>IDs das Partidas</h2>
+      <div class="row-flex">
+        <input id="id1" class="input-small" placeholder="ID 1">
+        <input id="id2" class="input-small" placeholder="ID 2">
+        <input id="id3" class="input-small" placeholder="ID 3">
+        <input id="id4" class="input-small" placeholder="ID 4">
+        <input id="id5" class="input-small" placeholder="ID 5">
+      </div>
+      <h2>Configurações</h2>
+      <div class="row-flex">
+        <select id="mandoSelect"><option value="home">Time da CASA</option><option value="away">Time de FORA</option></select>
+        <select id="cenarioSelect">
+          <option value="derrota_ht">Pressão 1ºT: Perdendo 0-35' -> Canto (37-HT)</option>
+          <option value="empate_ht">Pressão 1ºT: Empate 35' -> Canto (37-HT)</option>
+          <option value="vermelho_1t">Vermelho 1ºT: Expulsão até 35' -> 1+ Canto</option>
+          <option value="derrota_2t">Pressão 2ºT: Perdendo HT -> 5+ Cantos 2ºT</option>
+          <option value="pressao_70">Pressão 70+: Perdendo/Empatado 69' -> 3+ Cantos</option>
+          <option value="pressao_80">Pressão 80+: Perdendo/Empatado 79' -> 2+ Cantos</option>
+          <option value="retranca">Jogo Aberto: Ganhando HT -> 5+ Cantos 2ºT</option>
+          <option value="vermelho_2t">Vermelho 2ºT: Expulsão até 70' -> 3+ Cantos</option>
+          <option value="multi_gol">Multi-Gol: 3+ Gols 1ºT -> 5+ Cantos 2ºT</option>
+        </select>
+        <div class="label-inline">Limiar:<input id="limiarInput" class="input-small input-limiar" type="number" min="0" max="100" value="60">%</div>
+        <button id="btnBuscar" onclick="analisarTop5()">🚀 Analisar</button>
+      </div>
+      <div class="progress-bar-container" id="progContainer"><div class="progress-bar" id="progBar"></div></div>
+      <div class="status-text" id="statusText"></div>
+    </div>
+    <div class="perfil-banner" id="perfilBanner"></div>
+    <div id="resultadoContainer" class="res-container">
+      <div class="summary-box"><div class="summary-title">Resumo dos Melhores Jogos</div><div class="big-number" id="resPct">0%</div><div class="small-desc" id="resFractions"></div></div>
+      <div class="match-list" id="matchList"></div>
+      <button class="btn-telegram" id="btnTelegram" onclick="enviarTelegram()">📲 Telegram</button>
+      <div class="telegram-status" id="telegramStatus"></div>
+    </div>
+  </div>
+  <div id="tabScanner" style="display:none">
+    <div class="card">
+      <h1>🔍 Scanner de Cenários</h1>
+      <div class="row-flex">
+        <input id="scannerGameId" class="input-small" placeholder="ID" style="max-width:250px">
+        <select id="scannerMando"><option value="home">CASA</option><option value="away">FORA</option></select>
+        <div class="label-inline">Limiar:<input id="scannerLimiar" class="input-small input-limiar" type="number" min="0" max="100" value="50">%</div>
+        <button class="btn-scanner" id="btnScanner" onclick="executarScanner()">🔍 Escanear</button>
+      </div>
+      <div class="progress-bar-container" id="scannerProgContainer"><div class="progress-bar" id="scannerProgBar"></div></div>
+      <div class="status-text" id="scannerStatusText"></div>
+    </div>
+    <div class="perfil-banner" id="perfilBannerScanner"></div>
+    <div class="scanner-result" id="scannerResult">
+      <div class="scanner-header"><h3>🏆 Ranking</h3><div class="scanner-team" id="scannerTeamName">-</div><div class="scanner-match" id="scannerMatchName">-</div><div class="scanner-info" id="scannerAnaliseInfo"></div></div>
+      <div class="scanner-ranking" id="scannerRanking"></div>
+    </div>
+    <button class="btn-telegram" id="btnTelegramScanner" onclick="enviarTelegramScanner()" style="display:none">📲 Scanner</button>
+    <div class="telegram-status" id="telegramStatusScanner" style="display:none"></div>
+  </div>
+  <div id="tabHistorico" style="display:none"><div class="card"><h1>📊 Histórico</h1>
+    <div class="row-flex" style="margin-bottom:15px"><select id="filtroHistCenario" onchange="renderHistorico()"><option value="todos">Todos</option></select><button class="btn-secondary" onclick="limparHistorico()">🗑️</button></div>
+    <div id="historicoList"></div><div id="historicoStats" style="margin-top:15px"></div></div></div>
+  <div id="tabCache" style="display:none"><div class="card"><h1>💾 Cache</h1>
+    <div class="cache-info"><div class="cache-stat">Entradas:<b id="cacheCount">0</b></div><div class="cache-stat">Tamanho:<b id="cacheSize">0KB</b></div><div class="cache-stat">Hits:<b id="cacheHits">0</b></div><div class="cache-stat">Misses:<b id="cacheMisses">0</b></div></div>
+    <div class="row-flex" style="margin-top:15px"><button class="btn-secondary" onclick="limparCacheExpirado()">🧹 Expirados</button><button class="btn-secondary" onclick="limparTodoCache()">🗑️ Tudo</button></div></div></div>
+</div>
+
+<script>
+const MYTOKEN='45003_ec8357116e',TG_BOT_TOKEN='8645338323:AAG5jlzVICHNz-tYHBQtfZZ-8_gr_V_FOiw',TG_CHAT_ID='294730685';
+const CACHE_TTL=24*60*60*1000,DB_NAME='BuscadorContextoDB',DB_VERSION=1,PB=5;
+let ultimoRel=null,ultimoRelScan=null,cHit=0,cMiss=0;
+
+const C1T=[{id:'derrota_ht',nome:'Pressão 1ºT: Perdendo',desc:'Perdendo 0-35\' → Canto (37-HT)',grupo:'1t'},{id:'empate_ht',nome:'Pressão 1ºT: Empate',desc:'Empate 35\' → Canto (37-HT)',grupo:'1t'},{id:'vermelho_1t',nome:'Vermelho 1ºT',desc:'Expulsão até 35\' → 1+ Canto',grupo:'1t'}];
+const C2T=[{id:'derrota_2t',nome:'Pressão 2ºT: Perdendo',desc:'Perdendo HT → 5+ Cantos 2ºT',grupo:'2t'},{id:'pressao_70',nome:'Pressão 70+',desc:'Perdendo/Empatado 69\' → 3+ Cantos',grupo:'2t'},{id:'pressao_80',nome:'Pressão 80+',desc:'Perdendo/Empatado 79\' → 2+ Cantos',grupo:'2t'},{id:'retranca',nome:'Jogo Aberto 2ºT',desc:'Ganhando HT → 5+ Cantos 2ºT',grupo:'2t'},{id:'vermelho_2t',nome:'Vermelho 2ºT',desc:'Expulsão até 70\' → 3+ Cantos',grupo:'2t'},{id:'multi_gol',nome:'Multi-Gol 1ºT',desc:'3+ Gols 1ºT → 5+ Cantos 2ºT',grupo:'2t'}];
+const TODOS=[...C1T,...C2T];
+
+function cp(p){if(!p||p<=0)return'desconhecido';if(p<=6)return'forte';if(p<=14)return'medio';return'fraco'}
+function co(o){if(!o||o<=0)return'desconhecido';if(o<=1.80)return'forte';if(o<=3.00)return'medio';return'fraco'}
+function lp(c){return c==='forte'?'Top 6':c==='medio'?'Meio (7-14)':'Fundo (15+)'}
+function lo(c){return c==='forte'?'Favorito (≤1.80)':c==='medio'?'Médio (1.81-3.00)':'Azarão (>3.00)'}
+function em(c){return c==='forte'?'🔴':c==='medio'?'🟡':'🟢'}
+function pct(g,a){return a>0?Math.round((g/a)*100):-1}
+function conf(a){if(a>=8)return{label:'🟢 Alta',cl:'confidence-alta'};if(a>=4)return{label:'🟡 Média',cl:'confidence-media'};return{label:'🔴 Baixa',cl:'confidence-baixa'}}
+function criarFS(){return{posicao:{forte:{a:0,g:0},medio:{a:0,g:0},fraco:{a:0,g:0},desconhecido:{a:0,g:0}},odd:{forte:{a:0,g:0},medio:{a:0,g:0},fraco:{a:0,g:0},desconhecido:{a:0,g:0}}}}
+
+function extrairFA(data,isH){
+  let g=data.game||{},st=g.standings||{},mo=g.mainOdds||data.mainOdds||{};
+  let o1=(mo.main&&mo.main['1x2'])?mo.main['1x2']:null;
+  let aP=isH?parseInt(st.visitorteam_position)||0:parseInt(st.localteam_position)||0;
+  let aO=0;if(o1&&o1.length>=3)aO=isH?parseFloat(o1[2])||0:parseFloat(o1[0])||0;
+  return{aP,aO,cp:cp(aP),co:co(aO)}}
+
+function extrairCtx(dB){
+  let g=dB.game||{},st=g.standings||{},mo=g.mainOdds||dB.mainOdds||{};
+  let o1=(mo.main&&mo.main['1x2'])?mo.main['1x2']:null;
+  let hP=parseInt(st.localteam_position)||0,aP=parseInt(st.visitorteam_position)||0,hO=0,aO=0;
+  if(o1&&o1.length>=3){hO=parseFloat(o1[0])||0;aO=parseFloat(o1[2])||0}
+  return{hN:g.homeName,aN:g.awayName,hP,aP,hO,aO,hCp:cp(aP),hCo:co(aO),aCp:cp(hP),aCo:co(hO)}}
+
+// ===== PERFIL CONTEXTUAL: SÓ POSIÇÃO + ODD =====
+function construirPerfil(dadosH,dadosA,ctx){
+  let home={jogos:0,cantos:0,j5:0};
+  for(let d of dadosH){
+    if(!d||!d.game||!d.game.eventsClean)continue;
+    let g=d.game,isH=(g.homeName===ctx.hN),fc=extrairFA(d,isH);
+    if(fc.cp!==ctx.hCp||fc.co!==ctx.hCo)continue;
+    let cf=0;for(let e of g.eventsClean){if(e.tp==='c'){if(isH&&e.h==='h')cf++;if(!isH&&e.h==='a')cf++}}
+    home.jogos++;home.cantos+=cf;if(cf>=5)home.j5++}
+
+  let away={jogos:0,cantos:0,j5:0};
+  for(let d of dadosA){
+    if(!d||!d.game||!d.game.eventsClean)continue;
+    let g=d.game,isA=(g.awayName===ctx.aN),fc=extrairFA(d,!isA);
+    if(fc.cp!==ctx.aCp||fc.co!==ctx.aCo)continue;
+    let cc=0;for(let e of g.eventsClean){if(e.tp==='c'){if(isA&&e.h==='h')cc++;if(!isA&&e.h==='a')cc++}}
+    away.jogos++;away.cantos+=cc;if(cc>=5)away.j5++}
+  return{home,away,ctx}}
+
+function renderCtxBlock(dados,tipo){
+  if(dados.jogos===0)return'<div class="perfil-ctx-nodata">⚠️ Nenhum jogo encontrado com essa combinação de posição + odd</div>';
+  let media=(dados.cantos/dados.jogos).toFixed(1);
+  let p=pct(dados.j5,dados.jogos);
+  let cor=p>=70?'#00B37E':p>=50?'#FBA94C':'#f75a68';
+  return`<div class="perfil-ctx-result">
+    <div class="perfil-ctx-big">
+      <span class="perfil-ctx-media" style="color:#38bdf8">${media} ${tipo}/jogo</span>
+      <span class="perfil-ctx-pct" style="color:${cor}">5+: ${p}% (${dados.j5}/${dados.jogos})</span>
+    </div>
+    <div class="perfil-ctx-detail">Baseado em ${dados.jogos} jogos com adversários nesse perfil</div>
+  </div>`}
+
+function renderPerfilBanner(perfil,cId){
+  let c=document.getElementById(cId);if(!perfil){c.style.display='none';return}
+  let x=perfil.ctx;c.style.display='block';
+  let h=`<div class="perfil-header"><h3>📢 PERFIL DE ESCANTEIOS — Contexto da Partida</h3>
+    <div class="perfil-match">${x.hN} vs ${x.aN}</div></div>`;
+
+  h+=`<div class="perfil-ctx"><div class="perfil-ctx-header">
+    <span class="perfil-ctx-team" style="color:#38bdf8">🏠 ${x.hN} (Casa)</span></div>
+    <div class="perfil-ctx-desc">Cantos <b>a favor</b> jogando em casa contra adversários com o perfil do <b>${x.aN}</b>:</div>
+    <div class="perfil-ctx-tags">
+      <span class="perfil-ctx-tag pct-${x.hCp}">${em(x.hCp)} Posição: ${x.aP}º — ${lp(x.hCp)}</span>
+      <span class="perfil-ctx-tag pct-${x.hCo}">${em(x.hCo)} Odd: ${x.aO.toFixed(2)} — ${lo(x.hCo)}</span>
+    </div>${renderCtxBlock(perfil.home,'cantos')}</div>`;
+
+  h+=`<div class="perfil-ctx"><div class="perfil-ctx-header">
+    <span class="perfil-ctx-team" style="color:#a78bfa">✈️ ${x.aN} (Fora)</span></div>
+    <div class="perfil-ctx-desc">Cantos <b>cedidos</b> jogando fora contra adversários com o perfil do <b>${x.hN}</b>:</div>
+    <div class="perfil-ctx-tags">
+      <span class="perfil-ctx-tag pct-${x.aCp}">${em(x.aCp)} Posição: ${x.hP}º — ${lp(x.aCp)}</span>
+      <span class="perfil-ctx-tag pct-${x.aCo}">${em(x.aCo)} Odd: ${x.hO.toFixed(2)} — ${lo(x.aCo)}</span>
+    </div>${renderCtxBlock(perfil.away,'cedidos')}</div>`;
+
+  let pH=perfil.home.jogos>0?pct(perfil.home.j5,perfil.home.jogos):-1;
+  let pA=perfil.away.jogos>0?pct(perfil.away.j5,perfil.away.jogos):-1;
+  if(pH>=60&&pA>=60)h+=`<div class="perfil-conclusao perfil-conclusao-good">🔥 Cenário favorável! Casa faz 5+ em ${pH}% e visitante cede 5+ em ${pA}% nessas condições</div>`;
+  else if(pH>=50||pA>=50)h+=`<div class="perfil-conclusao perfil-conclusao-warn">⚠️ Parcialmente favorável — Casa: ${pH>=0?pH+'%':'N/A'} | Visitante: ${pA>=0?pA+'%':'N/A'}</div>`;
+  else if(pH>=0||pA>=0)h+=`<div class="perfil-conclusao perfil-conclusao-bad">❌ Desfavorável — Casa: ${pH>=0?pH+'%':'N/A'} | Visitante: ${pA>=0?pA+'%':'N/A'}</div>`;
+  h+=`<div class="perfil-footer">📊 Casa: ${perfil.home.jogos} jogos nesse perfil | Fora: ${perfil.away.jogos} jogos nesse perfil</div>`;
+  c.innerHTML=h}
+
+function montarPerfilTg(perfil){
+  if(!perfil)return'';let x=perfil.ctx,m='';
+  m+=`\n📢 <b>Perfil Escanteios — Contexto</b>\n`;
+  m+=`🏠 <b>${x.hN} (Casa)</b> — cantos a favor\n`;
+  m+=`  vs ${lp(x.hCp)} + ${lo(x.hCo)}\n`;
+  if(perfil.home.jogos>0){let med=(perfil.home.cantos/perfil.home.jogos).toFixed(1),p=pct(perfil.home.j5,perfil.home.jogos);
+    m+=`  🎯 ${med} cantos/jogo | 5+: ${p}% (${perfil.home.j5}/${perfil.home.jogos})\n`}
+  else m+=`  ⚠️ Sem dados nesse perfil\n`;
+  m+=`✈️ <b>${x.aN} (Fora)</b> — cantos cedidos\n`;
+  m+=`  vs ${lp(x.aCp)} + ${lo(x.aCo)}\n`;
+  if(perfil.away.jogos>0){let med=(perfil.away.cantos/perfil.away.jogos).toFixed(1),p=pct(perfil.away.j5,perfil.away.jogos);
+    m+=`  🎯 ${med} cedidos/jogo | 5+: ${p}% (${perfil.away.j5}/${perfil.away.jogos})\n`}
+  else m+=`  ⚠️ Sem dados nesse perfil\n`;
+  return m}
+
+// ===== FORÇA RENDER =====
+function renderFH(fs){
+  let h='<div class="forca-box"><div class="forca-title">💪 Força do Adversário</div><div class="forca-grid"><div><div class="forca-col-title">📊 Posição</div>';
+  ['forte','medio','fraco'].forEach(c=>{let s=fs.posicao[c],p=pct(s.g,s.a);let t=p>=0?`${p}% (${s.g}/${s.a})`:'N/A';let cr=p>=60?'#00B37E':p>=0?'#f75a68':'#7c7c8a';
+    h+=`<div class="forca-row forca-${c}"><span class="forca-label">${em(c)} ${lp(c)}</span><span class="forca-value" style="color:${cr}">${t}</span></div>`});
+  h+='</div><div><div class="forca-col-title">💰 Odd</div>';
+  ['forte','medio','fraco'].forEach(c=>{let s=fs.odd[c],p=pct(s.g,s.a);let t=p>=0?`${p}% (${s.g}/${s.a})`:'N/A';let cr=p>=60?'#00B37E':p>=0?'#f75a68':'#7c7c8a';
+    h+=`<div class="forca-row forca-${c}"><span class="forca-label">${em(c)} ${lo(c)}</span><span class="forca-value" style="color:${cr}">${t}</span></div>`});
+  h+='</div></div>';
+  let pf=pct(fs.posicao.forte.g,fs.posicao.forte.a),tot=fs.posicao.forte.a+fs.posicao.medio.a+fs.posicao.fraco.a;
+  if(tot>0){let pg=pct(fs.posicao.forte.g+fs.posicao.medio.g+fs.posicao.fraco.g,tot);if(pf>=0&&pf<pg-15)h+=`<div class="forca-alert forca-alert-danger">⚠️ Cai contra fortes (${pf}% vs ${pg}%)</div>`;else if(pf>=pg-5&&fs.posicao.forte.a>=2)h+=`<div class="forca-alert forca-alert-ok">✅ Mantém contra fortes</div>`}
+  return h+'</div>'}
+function renderFI(fs){let t='';['forte','medio','fraco'].forEach(c=>{let s=fs.posicao[c],p=pct(s.g,s.a);if(p<0)return;let l=c==='forte'?'Top6':c==='medio'?'Meio':'Fundo';t+=`<span class="scanner-forca-tag sf-${c}">${l}:${p}%</span>`});return t?`<div class="scanner-forca-inline">${t}</div>`:''}
+
+// ===== INDEXEDDB =====
+function abrirDB(){return new Promise((r,j)=>{let q=indexedDB.open(DB_NAME,DB_VERSION);q.onupgradeneeded=e=>{let d=e.target.result;if(!d.objectStoreNames.contains('cacheAPI'))d.createObjectStore('cacheAPI',{keyPath:'chave'}).createIndex('timestamp','timestamp',{unique:false});if(!d.objectStoreNames.contains('historicoAnalises'))d.createObjectStore('historicoAnalises',{keyPath:'id',autoIncrement:true}).createIndex('cenario','cenario',{unique:false})};q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error)})}
+async function cGet(k){try{let d=await abrirDB();return new Promise(r=>{let q=d.transaction('cacheAPI','readonly').objectStore('cacheAPI').get(k);q.onsuccess=()=>{let x=q.result;if(x&&Date.now()-x.timestamp<CACHE_TTL){cHit++;r(x.dados)}else{cMiss++;r(null)}};q.onerror=()=>{cMiss++;r(null)}})}catch(e){cMiss++;return null}}
+async function cSet(k,d){try{let db=await abrirDB();return new Promise(r=>{let t=db.transaction('cacheAPI','readwrite');t.objectStore('cacheAPI').put({chave:k,dados:d,timestamp:Date.now()});t.oncomplete=()=>r(true)})}catch(e){return false}}
+async function getCacheStats(){try{let d=await abrirDB();return new Promise(r=>{let q=d.transaction('cacheAPI','readonly').objectStore('cacheAPI').getAll();q.onsuccess=()=>{let i=q.result||[];r({total:i.length,validos:i.filter(x=>Date.now()-x.timestamp<CACHE_TTL).length,size:new Blob([JSON.stringify(i)]).size})}})}catch(e){return{total:0,validos:0,size:0}}}
+async function limparCacheExpirado(){try{let d=await abrirDB();let t=d.transaction('cacheAPI','readwrite');let s=t.objectStore('cacheAPI');let q=s.getAll();q.onsuccess=()=>{for(let i of q.result)if(Date.now()-i.timestamp>=CACHE_TTL)s.delete(i.chave)};t.oncomplete=()=>{atualizarCacheUI();alert('OK!')}}catch(e){}}
+async function limparTodoCache(){if(!confirm('Limpar?'))return;try{let d=await abrirDB();let t=d.transaction('cacheAPI','readwrite');t.objectStore('cacheAPI').clear();t.oncomplete=()=>{atualizarCacheUI();alert('OK!')}}catch(e){}}
+async function atualizarCacheUI(){let s=await getCacheStats();document.getElementById('cacheCount').innerText=s.validos+'/'+s.total;document.getElementById('cacheSize').innerText=(s.size/1024).toFixed(1)+'KB';document.getElementById('cacheHits').innerText=cHit;document.getElementById('cacheMisses').innerText=cMiss}
+async function salvarHist(e){try{let d=await abrirDB();return new Promise(r=>{let t=d.transaction('historicoAnalises','readwrite');t.objectStore('historicoAnalises').add(e);t.oncomplete=()=>r(true)})}catch(e){return false}}
+async function getHist(){try{let d=await abrirDB();return new Promise(r=>{let q=d.transaction('historicoAnalises','readonly').objectStore('historicoAnalises').getAll();q.onsuccess=()=>r(q.result||[])})}catch(e){return[]}}
+async function limparHistorico(){if(!confirm('Limpar?'))return;try{let d=await abrirDB();let t=d.transaction('historicoAnalises','readwrite');t.objectStore('historicoAnalises').clear();t.oncomplete=()=>{renderHistorico();alert('OK!')}}catch(e){}}
+async function renderHistorico(){let h=await getHist(),f=document.getElementById('filtroHistCenario').value;let cs=[...new Set(h.map(x=>x.cenario))],o='<option value="todos">Todos</option>';cs.forEach(c=>{o+=`<option value="${c}" ${f===c?'selected':''}>${c}</option>`});document.getElementById('filtroHistCenario').innerHTML=o;
+  let fl=f==='todos'?h:h.filter(x=>x.cenario===f);fl.sort((a,b)=>new Date(b.dc)-new Date(a.dc));let el=document.getElementById('historicoList');if(!fl.length){el.innerHTML='<p style="color:#7c7c8a;font-size:13px">Vazio.</p>';document.getElementById('historicoStats').innerHTML='';return}
+  let html='';fl.forEach(x=>{let e=x.media>=80?'🟢':x.media>=60?'🟡':'🔴';html+=`<div class="hist-item"><div><div class="hist-info">${x.tipo==='scanner'?'🔍':'🎯'} ${e} <b>${x.cenario}</b></div><div class="hist-date">📅 ${x.data} | ${x.qB}/${x.qA}</div></div><div class="hist-pct" style="color:${x.media>=60?'#00B37E':'#f75a68'}">${x.media}%</div></div>`});
+  el.innerHTML=html;let tot=fl.length;document.getElementById('historicoStats').innerHTML=`<div class="cache-info"><div class="cache-stat">Total:<b>${tot}</b></div><div class="cache-stat">Média:<b>${Math.round(fl.reduce((s,x)=>s+x.media,0)/tot)}%</b></div></div>`}
+
+function switchTab(t){let ts=['analise','scanner','historico','cache'];document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',ts[i]===t));ts.forEach(x=>{let e=document.getElementById('tab'+x.charAt(0).toUpperCase()+x.slice(1));if(e)e.style.display=x===t?'block':'none'});if(t==='historico')renderHistorico();if(t==='cache')atualizarCacheUI()}
+
+function fm(t){if(!t)return-1;let s=String(t).trim();if(s.indexOf('45+')===0)return 45;if(s.indexOf('90+')===0)return 90;return parseInt(s)||-1}
+function i1(t){if(!t)return false;let s=String(t).trim();if(s.indexOf('45+')===0)return true;return(parseInt(s)||0)<=45}
+async function fCC(id,ex){let k=`g_${id}_${ex||''}`;let c=await cGet(k);if(c)return c;let u=`https://cornerprobet.com/api/v3/getAnalysis.php?gameId=${id}&token=${MYTOKEN}`;if(ex)u+=`&${ex}`;let r=await fetch(u);let d=await r.json();await cSet(k,d);return d}
+async function lotes(ids,fn,t){let r=[];for(let i=0;i<ids.length;i+=t){r.push(...await Promise.all(ids.slice(i,i+t).map(id=>fn(id))))}return r}
+
+function analisarHM(data,mn,cens){
+  try{let g=data.game;if(!g||!g.eventsClean)return null;
+    let isH=(g.homeName===mn),fc=extrairFA(data,isH);
+    let mP=0,aP=0,mPH=0,aPH=0,mP35=0,aP35=0,mP69=0,aP69=0,mP79=0,aP79=0;
+    let gC=false,g1T=0,c37=[],c2T=0,c70=[],c80=[];
+    let v1=-1,v2=-1,cv1=0,cv2=0;
+    let evs=g.eventsClean.sort((a,b)=>fm(a.t)-fm(b.t));
+    for(let e of evs){let m=fm(e.t);if(m===-1)continue;let f=i1(e.t);
+      if(e.tp==='g'||e.tp==='p'||e.tp==='og'){if(e.h==='h')isH?mP++:aP++;if(e.h==='a')isH?aP++:mP++;if(f){g1T++;mPH=mP;aPH=aP;if(aP>mP&&m<=35&&!gC)gC=true}}
+      if(e.tp==='rc'||e.tp==='yr'){if(f&&m<=35&&v1===-1)v1=m;if(!f&&m<=70&&v2===-1)v2=m}
+      if(m<=35&&f){mP35=mP;aP35=aP}if(!f&&m<=69){mP69=mP;aP69=aP}if(!f&&m<=79){mP79=mP;aP79=aP}
+      if(e.tp==='c'){if(f){if(m>=37)c37.push(1)}else{c2T++;if(m>=70)c70.push(1);if(m>=80)c80.push(1)}
+        if(v1!==-1&&f&&m>=v1)cv1++;if(v2!==-1&&!f&&m>=v2)cv2++}}
+    let res={};for(let c of cens){let en=false,gr=false;
+      if(c==='derrota_ht'&&gC){en=true;gr=c37.length>0}
+      else if(c==='empate_ht'&&mP35===aP35){en=true;gr=c37.length>0}
+      else if(c==='vermelho_1t'&&v1!==-1){en=true;gr=cv1>=1}
+      else if(c==='derrota_2t'&&aPH>mPH){en=true;gr=c2T>=5}
+      else if(c==='pressao_70'&&aP69>=mP69){en=true;gr=c70.length>=3}
+      else if(c==='pressao_80'&&aP79>=mP79){en=true;gr=c80.length>=2}
+      else if(c==='retranca'&&mPH>aPH){en=true;gr=c2T>=5}
+      else if(c==='vermelho_2t'&&v2!==-1){en=true;gr=cv2>=3}
+      else if(c==='multi_gol'&&g1T>=3){en=true;gr=c2T>=5}
+      res[c]={en,gr,fc}}
+    return{cenarios:res,fc}
+  }catch(e){return null}}
+
+async function coletarDados(gid,mando){
+  let dB=await fCC(gid,'games=20');
+  let hH=dB.lastGames.home.asHome||[],hA=dB.lastGames.away.asAway||[];
+  let mn=mando==='home'?dB.game.homeName:dB.game.awayName;
+  let hist=mando==='home'?hH:hA;if(!hist||!hist.length)throw new Error("Sem histórico.");
+  let [dH,dA]=await Promise.all([lotes(hH.map(g=>g.id).filter(x=>x),async id=>{try{return await fCC(id,'')}catch(e){return null}},PB),lotes(hA.map(g=>g.id).filter(x=>x),async id=>{try{return await fCC(id,'')}catch(e){return null}},PB)]);
+  let dM=mando==='home'?dH:dA;
+  let ctx=extrairCtx(dB);
+  let perfil=construirPerfil(dH,dA,ctx);
+  return{dB,hist,mn,dM,perfil,tJ:hist.length,jOk:dM.filter(d=>d).length}}
+
+async function analisarJogo(gid,mando,cen){
+  try{let d=await coletarDados(gid,mando);
+    let apt=0,grn=0,fs=criarFS();
+    for(let dh of d.dM){if(!dh)continue;let r=analisarHM(dh,d.mn,[cen]);if(!r||!r.cenarios[cen])continue;
+      let res=r.cenarios[cen];if(res.en){apt++;if(res.gr)grn++;let fc=res.fc;
+        if(fc.cp!=='desconhecido'){fs.posicao[fc.cp].a++;if(res.gr)fs.posicao[fc.cp].g++}
+        if(fc.co!=='desconhecido'){fs.odd[fc.co].a++;if(res.gr)fs.odd[fc.co].g++}}}
+    return{ok:true,gid,mn:d.mn,mando,cen,grn,apt,p:apt>0?Math.round((grn/apt)*100):0,cf:conf(apt),fs,perfil:d.perfil,dB:d.dB,tJ:d.tJ,
+      title:`${d.dB.game.homeName} ${d.dB.game.score} ${d.dB.game.awayName}`,date:d.dB.game.date||d.dB.game.gamedate||''}
+  }catch(e){return{ok:false,gid,error:e.message}}}
+
+async function analisarTop5(){
+  let ids=['id1','id2','id3','id4','id5'].map(x=>document.getElementById(x).value.trim()).filter(x=>x);if(!ids.length){alert("ID!");return}
+  let lim=parseInt(document.getElementById('limiarInput').value)||0,mando=document.getElementById('mandoSelect').value,cen=document.getElementById('cenarioSelect').value;
+  document.getElementById('btnBuscar').disabled=true;document.getElementById('progContainer').style.display='block';document.getElementById('statusText').innerText="Analisando...";
+  document.getElementById('progBar').style.width='30%';document.getElementById('resultadoContainer').style.display='none';document.getElementById('btnTelegram').style.display='none';
+  document.getElementById('perfilBanner').style.display='none';ultimoRel=null;
+  let res=await Promise.all(ids.map(id=>analisarJogo(id,mando,cen)));document.getElementById('progBar').style.width='90%';
+  let pv=res.find(r=>r.ok&&r.perfil);if(pv)renderPerfilBanner(pv.perfil,'perfilBanner');
+  let bons=res.filter(r=>r.ok&&r.apt>0&&r.p>=lim).sort((a,b)=>b.p-a.p);
+  let ml=document.getElementById('matchList');ml.innerHTML="";
+  let cenTxt=document.getElementById('cenarioSelect').options[document.getElementById('cenarioSelect').selectedIndex].text;
+  if(!bons.length){ml.innerHTML=`<p style='color:#7c7c8a;font-size:13px'>Nenhum ≥ ${lim}%.</p>`;document.getElementById('resPct').innerText="0%";document.getElementById('resFractions').innerText=""}
+  else{let med=Math.round(bons.reduce((s,r)=>s+r.p,0)/bons.length);document.getElementById('resPct').innerText=med+"%";document.getElementById('resFractions').innerText=`${bons.length} jogos ≥ ${lim}%`;
+    bons.forEach(r=>{let div=document.createElement('div');div.className="match-item";
+      div.innerHTML=`<div class="match-header"><div class="match-title">${r.title} <span style="color:#a8a8b3">(${r.date})</span></div><span class="tag-badge">${r.p}% | ${r.grn}/${r.apt}</span><span class="confidence-badge ${r.cf.cl}">${r.cf.label}</span>
+        <button class="btn-link" onclick="window.open('https://cornerprobet.com/pt/analysis/game/${r.gid}','_blank')">Abrir</button></div><div class="result-line"><b>${r.mn}</b> (${r.mando==='home'?'Casa':'Fora'}) – <span style="color:#38bdf8">${cenTxt}</span></div>${renderFH(r.fs)}`;ml.appendChild(div)});
+    ultimoRel=montarMsgTg(bons,ids.length,lim,cenTxt,pv);document.getElementById('btnTelegram').style.display='inline-block';document.getElementById('btnTelegram').disabled=false}
+  await salvarHist({tipo:'analise',data:new Date().toLocaleDateString('pt-BR'),dc:new Date().toISOString(),cenario:cenTxt,mando,limiar:lim,media:bons.length?Math.round(bons.reduce((s,r)=>s+r.p,0)/bons.length):0,qB:bons.length,qA:ids.length,jogos:bons.map(r=>({team:r.mn,pct:r.p,gid:r.gid}))});
+  document.getElementById('statusText').innerText=`✅ Cache: ${cHit}/${cMiss}`;document.getElementById('progBar').style.width='100%';document.getElementById('resultadoContainer').style.display='block';document.getElementById('btnBuscar').disabled=false}
+
+function renderSG(titulo,classe,icone,cenarios,res,lim){
+  let h=`<div class="scanner-group-header ${classe}">${icone} ${titulo}</div>`;
+  let rk=cenarios.map(c=>{let r=res[c.id],p=r.a>0?Math.round((r.g/r.a)*100):-1;return{...c,a:r.a,g:r.g,p,cf:conf(r.a),fs:r.fs}});
+  let com=rk.filter(r=>r.a>0).sort((a,b)=>b.p-a.p),sem=rk.filter(r=>r.a===0),ac=com.filter(r=>r.p>=lim),ab=com.filter(r=>r.p<lim);
+  if(ac.length){h+=`<div class="scanner-divider">✅ ACIMA (≥${lim}%)</div>`;ac.forEach((r,i)=>{let e=r.p>=80?'🟢':r.p>=60?'🟡':'🟠';let p=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}º`;
+    h+=`<div class="scanner-row"><div class="scanner-pos">${p}</div><div class="scanner-cenario-name">${r.nome}<small>${r.desc}</small>${renderFI(r.fs)}</div><div class="scanner-detail">${r.g}/${r.a}<br><span class="confidence-badge ${r.cf.cl}" style="font-size:10px">${r.cf.label}</span></div><div class="scanner-pct" style="color:${r.p>=70?'#00B37E':'#FBA94C'}">${e} ${r.p}%</div></div>`})}
+  if(ab.length){h+=`<div class="scanner-divider">⚠️ ABAIXO</div>`;ab.forEach(r=>{h+=`<div class="scanner-row" style="opacity:.6"><div class="scanner-pos">—</div><div class="scanner-cenario-name">${r.nome}<small>${r.desc}</small></div><div class="scanner-detail">${r.g}/${r.a}</div><div class="scanner-pct" style="color:#f75a68">🔴 ${r.p}%</div></div>`})}
+  if(sem.length){h+=`<div class="scanner-divider">📭 SEM DADOS</div>`;sem.forEach(r=>{h+=`<div class="scanner-row" style="opacity:.4"><div class="scanner-pos">—</div><div class="scanner-cenario-name">${r.nome}</div><div class="scanner-detail">0</div><div class="scanner-pct" style="color:#7c7c8a">N/A</div></div>`})}
+  return{html:h,ac,ab,sem}}
+
+async function executarScanner(){
+  let gid=document.getElementById('scannerGameId').value.trim();if(!gid){alert('ID!');return}
+  let mando=document.getElementById('scannerMando').value,lim=parseInt(document.getElementById('scannerLimiar').value)||0;
+  document.getElementById('btnScanner').disabled=true;document.getElementById('scannerProgContainer').style.display='block';
+  document.getElementById('scannerProgBar').style.width='10%';document.getElementById('scannerStatusText').innerText='Buscando...';
+  document.getElementById('scannerResult').style.display='none';document.getElementById('btnTelegramScanner').style.display='none';
+  document.getElementById('perfilBannerScanner').style.display='none';ultimoRelScan=null;
+  try{
+    let d=await coletarDados(gid,mando);
+    let mt=`${d.dB.game.homeName} ${d.dB.game.score||'vs'} ${d.dB.game.awayName}`,md=d.dB.game.date||'';
+    document.getElementById('scannerProgBar').style.width='70%';document.getElementById('scannerStatusText').innerText='Analisando...';
+    renderPerfilBanner(d.perfil,'perfilBannerScanner');
+    let ids=TODOS.map(c=>c.id),res={};ids.forEach(c=>{res[c]={a:0,g:0,fs:criarFS()}});
+    for(let dh of d.dM){if(!dh)continue;let r=analisarHM(dh,d.mn,ids);if(!r)continue;
+      for(let cid of ids){if(r.cenarios[cid]&&r.cenarios[cid].en){res[cid].a++;if(r.cenarios[cid].gr)res[cid].g++;let fc=r.cenarios[cid].fc;
+        if(fc.cp!=='desconhecido'){res[cid].fs.posicao[fc.cp].a++;if(r.cenarios[cid].gr)res[cid].fs.posicao[fc.cp].g++}
+        if(fc.co!=='desconhecido'){res[cid].fs.odd[fc.co].a++;if(r.cenarios[cid].gr)res[cid].fs.odd[fc.co].g++}}}}
+    document.getElementById('scannerTeamName').innerText=`⚽ ${d.mn} (${mando==='home'?'Casa':'Fora'})`;
+    document.getElementById('scannerMatchName').innerText=`${mt} — ${md}`;document.getElementById('scannerAnaliseInfo').innerText=`📊 ${d.jOk} jogos`;
+    let g1=renderSG('1º TEMPO','scanner-group-1t','⏱️',C1T,res,lim);
+    let g2=renderSG('2º TEMPO','scanner-group-2t','⏱️',C2T,res,lim);
+    document.getElementById('scannerRanking').innerHTML=g1.html+g2.html;document.getElementById('scannerResult').style.display='block';
+    let bons=[...g1.ac,...g2.ac];
+    ultimoRelScan=montarMsgTgS(d.mn,mando,mt,md,d.jOk,g1,g2,lim,d.perfil);
+    if(bons.length){document.getElementById('btnTelegramScanner').style.display='inline-block';document.getElementById('btnTelegramScanner').disabled=false}
+    await salvarHist({tipo:'scanner',data:new Date().toLocaleDateString('pt-BR'),dc:new Date().toISOString(),cenario:`Scanner: ${mt}`,mando,limiar:lim,media:bons.length?Math.round(bons.reduce((s,r)=>s+r.p,0)/bons.length):0,qB:bons.length,qA:TODOS.length});
+    document.getElementById('scannerProgBar').style.width='100%';document.getElementById('scannerStatusText').innerText=`✅ ${bons.length} acima ${lim}% | Cache: ${cHit}/${cMiss}`
+  }catch(e){document.getElementById('scannerStatusText').innerText=`❌ ${e.message}`;document.getElementById('scannerProgBar').style.background='#f75a68'}
+  document.getElementById('btnScanner').disabled=false}
+
+function montarMsgTg(bons,total,lim,cenTxt,pv){
+  let med=Math.round(bons.reduce((s,r)=>s+r.p,0)/bons.length);
+  let m='━━━━━━━━━━━━━━━━━━━━━\n🎯 <b>Melhores Jogos</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n';
+  m+=`📊 <b>Média: ${med}%</b> | ${bons.length} ≥ ${lim}%\n📋 <i>${cenTxt}</i>\n`;
+  if(pv&&pv.perfil)m+=montarPerfilTg(pv.perfil);m+='\n';
+  bons.forEach(r=>{let e=r.p>=80?'🟢':r.p>=60?'🟡':'🔴';m+=`${e} <b>${r.title}</b> | ${r.date}\n📈 <b>${r.p}%</b> (${r.grn}/${r.apt}) | ${r.cf.label}\n⚽ ${r.mn} | 🔗 <a href="https://cornerprobet.com/pt/analysis/game/${r.gid}">Abrir</a>\n\n`});
+  m+='⏰ '+new Date().toLocaleString('pt-BR');return m}
+
+function montarMsgTgS(team,mando,match,date,jogos,g1,g2,lim,perfil){
+  let m='━━━━━━━━━━━━━━━━━━━━━\n🔍 <b>Scanner</b>\n━━━━━━━━━━━━━━━━━━━━━\n\n';
+  m+=`⚽ <b>${team}</b> (${mando==='home'?'🏠':'✈️'})\n📋 ${match} | ${date}\n📊 Limiar: ${lim}% | ${jogos} jogos\n`;
+  if(perfil)m+=montarPerfilTg(perfil);m+='\n';
+  let rg=(t,g)=>{m+=`<b>${t}</b>\n`;if(g.ac.length)g.ac.forEach((r,i)=>{let e=r.p>=80?'🟢':r.p>=60?'🟡':'🟠';m+=`${i===0?'🥇':i===1?'🥈':'🥉'} ${e} ${r.nome} — <b>${r.p}%</b> (${r.g}/${r.a})\n`});
+    if(g.ab.length)g.ab.forEach(r=>{m+=`🔴 ${r.nome} — ${r.p}%\n`});if(g.sem.length)g.sem.forEach(r=>{m+=`◽ ${r.nome} — N/A\n`});m+='\n'};
+  rg('⏱️ 1º TEMPO',g1);rg('⏱️ 2º TEMPO',g2);m+='⏰ '+new Date().toLocaleString('pt-BR');return m}
+
+async function enviarTelegram(){if(!ultimoRel)return;let b=document.getElementById('btnTelegram'),s=document.getElementById('telegramStatus');b.disabled=true;s.style.display='block';s.innerText='Enviando...';
+  try{let r=await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TG_CHAT_ID,text:ultimoRel,parse_mode:'HTML',disable_web_page_preview:true})});let d=await r.json();if(d.ok){s.innerText='✅';s.style.color='#00B37E'}else throw new Error(d.description)}catch(e){s.innerText='❌ '+e.message;s.style.color='#f75a68';b.disabled=false}}
+async function enviarTelegramScanner(){if(!ultimoRelScan)return;let b=document.getElementById('btnTelegramScanner'),s=document.getElementById('telegramStatusScanner');b.disabled=true;s.style.display='block';s.innerText='Enviando...';
+  try{let r=await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TG_CHAT_ID,text:ultimoRelScan,parse_mode:'HTML',disable_web_page_preview:true})});let d=await r.json();if(d.ok){s.innerText='✅';s.style.color='#00B37E'}else throw new Error(d.description)}catch(e){s.innerText='❌ '+e.message;s.style.color='#f75a68';b.disabled=false}}
+
+abrirDB().then(()=>console.log('DB OK'))
+</script>
+</body>
+</html>
