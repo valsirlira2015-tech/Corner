@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧬 DNA Cenários - Escanteios</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#121214;color:#fff;padding:20px;margin:0}
+.container{max-width:1000px;margin:0 auto}
+.card{background:#202024;padding:20px;border-radius:12px;border:1px solid #323238;margin-bottom:20px}
+h1{font-size:1.4rem;color:#00875f;margin-top:0;display:flex;align-items:center;gap:10px}
+h2{font-size:1.1rem;margin:15px 0 10px}
+h3{font-size:1rem;margin:12px 0 8px}
+.row-flex{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.input-small{background:#121214;color:#fff;border:1px solid #323238;padding:10px 12px;border-radius:8px;font-size:14px;outline:none;min-width:200px}
+.input-small:focus{border-color:#00875f}
+button{background:#00875f;color:#fff;border:none;padding:12px 22px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;transition:background .2s}
+button:hover{background:#015f43}
+button:disabled{background:#323238;color:#7c7c8a;cursor:not-allowed}
+.progress{width:100%;height:8px;background:#323238;border-radius:4px;margin-top:12px;overflow:hidden;display:none}
+.progress-bar{height:100%;background:#38bdf8;width:0%;transition:width .3s}
+.status{font-size:13px;color:#a8a8b3;margin-top:10px;text-align:center}
+.tag{padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600;display:inline-block;margin:2px}
+.tag-green{background:#00875f22;color:#00B37E;border:1px solid #00875f55}
+.tag-yellow{background:#c4760022;color:#FBA94C;border:1px solid #c4760055}
+.tag-red{background:#f7345822;color:#f75a68;border:1px solid #f7345855}
+.tag-blue{background:#38bdf822;color:#38bdf8;border:1px solid #38bdf855}
+.tag-purple{background:#7c3aed22;color:#a78bfa;border:1px solid #7c3aed55}
+
+/* DNA Cards */
+.dna-header{background:#1c1c1f;border:1px solid #7c3aed55;border-radius:10px;padding:16px;text-align:center;margin-bottom:20px}
+.dna-header h2{color:#a78bfa;margin:0 0 6px}
+.dna-match{font-size:1.2rem;font-weight:700;color:#fff}
+.dna-sub{font-size:12px;color:#7c7c8a;margin-top:4px}
+
+/* Perfil DNA */
+.dna-perfil{background:#1c1c1f;border:1px solid #323238;border-radius:10px;padding:16px;margin-bottom:16px}
+.dna-perfil-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #29292e}
+.dna-team{font-size:1rem;font-weight:700}
+.dna-tags{display:flex;gap:4px;flex-wrap:wrap}
+.dna-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px}
+.dna-stat-item{background:#121214;border:1px solid #29292e;border-radius:8px;padding:10px;text-align:center}
+.dna-stat-label{font-size:10px;color:#7c7c8a;text-transform:uppercase;letter-spacing:.5px}
+.dna-stat-valor{font-size:1.3rem;font-weight:700;margin-top:2px}
+.dna-stat-sub{font-size:10px;color:#a8a8b3;margin-top:2px}
+
+/* Impacto Stats */
+.dna-impacto{background:#121214;border:1px solid #29292e;border-radius:8px;padding:12px;margin-top:10px}
+.dna-impacto-title{font-size:11px;color:#a8a8b3;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px}
+.dna-impacto-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1e1e22;font-size:13px}
+.dna-impacto-row:last-child{border-bottom:none}
+.bar-bg{width:100px;height:6px;background:#323238;border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:6px}
+.bar-fill{height:100%;border-radius:3px}
+
+/* Cenários */
+.cenario-grupo{margin-bottom:20px}
+.cenario-grupo-header{padding:12px;font-size:13px;font-weight:700;background:#1c1c1f;border:1px solid #323238;border-radius:8px 8px 0 0;display:flex;align-items:center;gap:8px}
+.cenario-grupo-1t{color:#38bdf8;border-color:#38bdf855}
+.cenario-grupo-2t{color:#a78bfa;border-color:#7c3aed55}
+.cenario-grupo-jogo{color:#00B37E;border-color:#00875f55}
+.cenario-list{border:1px solid #323238;border-top:none;border-radius:0 0 8px 8px;overflow:hidden}
+.cenario-row{display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid #29292e;transition:background .15s}
+.cenario-row:last-child{border-bottom:none}
+.cenario-row:hover{background:#1c1c1f}
+.cenario-icon{font-size:1.2rem;min-width:30px;text-align:center}
+.cenario-info{flex:1}
+.cenario-nome{font-size:13px;font-weight:600;color:#e1e1e6}
+.cenario-desc{font-size:11px;color:#7c7c8a;margin-top:2px}
+.cenario-dna-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.cenario-dna-tag{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:500;background:#29292e;color:#a8a8b3}
+.cenario-resultado{text-align:right;min-width:120px}
+.cenario-pct{font-size:1.2rem;font-weight:700}
+.cenario-fraction{font-size:11px;color:#a8a8b3}
+.cenario-confianca{font-size:10px;margin-top:2px}
+.cenario-sem-dados{opacity:.4;font-style:italic}
+
+/* Score DNA */
+.dna-score-box{background:#1c1c1f;border:2px solid #7c3aed;border-radius:12px;padding:20px;text-align:center;margin-top:20px}
+.dna-score-valor{font-size:2.5rem;font-weight:700}
+.dna-score-barra{width:100%;max-width:400px;height:12px;background:#323238;border-radius:6px;overflow:hidden;margin:10px auto}
+.dna-score-fill{height:100%;border-radius:6px;transition:width .5s}
+.dna-score-label{font-size:14px;font-weight:600;margin-top:6px}
+.dna-score-detalhe{font-size:12px;color:#a8a8b3;margin-top:4px}
+
+/* Cruzamento */
+.cruzamento-box{background:#121214;border:1px solid #323238;border-radius:8px;padding:12px;margin-top:12px}
+.cruzamento-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1e1e22;font-size:13px}
+.cruzamento-row:last-child{border-bottom:none}
+.cruzamento-label{color:#a8a8b3}
+.cruzamento-match{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:600}
+.match-sim{background:#00875f22;color:#00B37E}
+.match-nao{background:#f7345822;color:#f75a68}
+.match-parcial{background:#c4760022;color:#FBA94C}
+
+/* Telegram */
+.btn-telegram{background:#0088cc;color:#fff;border:none;padding:12px 22px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;margin-top:15px;display:none}
+.btn-telegram:disabled{background:#323238;color:#7c7c8a}
+.tg-status{font-size:12px;color:#a8a8b3;margin-top:6px;display:none}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>🧬 DNA Cenários — Escanteios com Perfil Estatístico</h1>
+    <p style="color:#a8a8b3;font-size:13px;line-height:1.5">Analisa cenários cruzando <b>contexto do jogo</b> com o <b>DNA estatístico</b> do adversário (últimos 20 jogos).</p>
+    <div class="row-flex">
+      <input id="gameId" class="input-small" placeholder="ID do Jogo">
+      <button id="btnAnalise" onclick="executar()">🧬 Analisar DNA</button>
+    </div>
+    <div class="progress" id="prog"><div class="progress-bar" id="progBar"></div></div>
+    <div class="status" id="status"></div>
+  </div>
+  <div id="resultado" style="display:none"></div>
+  <button class="btn-telegram" id="btnTg" onclick="enviarTelegram()">📲 Enviar Telegram</button>
+  <div class="tg-status" id="tgStatus"></div>
+</div>
+
+<script>
+const TOKEN='45003_ec8357116e', PARALLEL=5;
+const TG_BOT_TOKEN='8645338323:AAG5jlzVICHNz-tYHBQtfZZ-8_gr_V_FOiw', TG_CHAT_ID='294730685';
+let ultimoTg = null;
+
+// ===== API =====
+async function fetchAPI(id, extra) {
+  let u = `https://cornerprobet.com/api/v3/getAnalysis.php?gameId=${id}&token=${TOKEN}`;
+  if (extra) u += `&${extra}`;
+  let r = await fetch(u);
+  return await r.json();
+}
+async function lotes(ids, fn) {
+  let r = [];
+  for (let i = 0; i < ids.length; i += PARALLEL) {
+    r.push(...await Promise.all(ids.slice(i, i + PARALLEL).map(id => fn(id).catch(() => null))));
+  }
+  return r;
+}
+
+// ===== UTILS =====
+function fmtMin(t) { if (!t) return -1; let s = String(t).trim(); if (s.indexOf('45+') === 0) return 45; if (s.indexOf('90+') === 0) return 90; return parseInt(s) || -1; }
+function is1T(t) { if (!t) return false; let s = String(t).trim(); if (s.indexOf('45+') === 0) return true; return (parseInt(s) || 0) <= 45; }
+function pct(g, a) { return a > 0 ? Math.round((g / a) * 100) : -1; }
+function avg(arr) { return arr.length > 0 ? parseFloat((arr.reduce((s, v) => s + v, 0) / arr.length).toFixed(1)) : 0; }
+function corPct(p) { return p >= 70 ? '#00B37E' : p >= 50 ? '#FBA94C' : '#f75a68'; }
+function confLabel(a) { if (a >= 8) return { t: '🟢 Alta', c: 'tag-green' }; if (a >= 4) return { t: '🟡 Média', c: 'tag-yellow' }; return { t: '🔴 Baixa', c: 'tag-red' }; }
+
+// ===== EXTRAIR DNA DE UM TIME =====
+function extrairDNA(jogosData, tipo) {
+  // tipo: 'home' = jogando em casa, 'away' = jogando fora
+  let idx = tipo === 'home' ? 0 : 1;
+  let idxAdv = tipo === 'home' ? 1 : 0;
+
+  let jogos = [];
+
+  for (let d of jogosData) {
+    if (!d || !d.game) continue;
+    let g = d.game, st = g.stats;
+    if (!st || !g.eventsClean) continue;
+
+    // Stats do time
+    let stats = {};
+    let campos = ['blocked','outsidebox','total_crosses','dangerous_attacks','shots','tackles',
+      'possessiontime','insidebox','fouls','key_passes','accurate_crosses','attacks','saves','corners'];
+    for (let c of campos) {
+      if (st[c]) {
+        stats[c] = { time: parseFloat(st[c][idx]) || 0, adv: parseFloat(st[c][idxAdv]) || 0 };
+      }
+    }
+
+    // Cantos por eventos
+    let cantos1T = { favor: 0, contra: 0 }, cantos2T = { favor: 0, contra: 0 };
+    let cantosTotal = { favor: 0, contra: 0 };
+    let golsTime = 0, golsAdv = 0;
+    let golsTimeHT = 0, golsAdvHT = 0;
+    let gol35time = 0, gol35adv = 0;
+    let evs = g.eventsClean.sort((a, b) => fmtMin(a.t) - fmtMin(b.t));
+
+    // Detectar lado do time
+    let lado = tipo === 'home' ? 'h' : 'a';
+    let ladoAdv = tipo === 'home' ? 'a' : 'h';
+
+    // Verificar se o time é realmente home/away neste jogo
+    // Para jogos do histórico, precisamos verificar
+    let teamName = null; // será definido depois
+
+    for (let e of evs) {
+      let m = fmtMin(e.t);
+      if (m === -1) continue;
+      let f = is1T(e.t);
+
+      if (e.tp === 'g' || e.tp === 'p' || e.tp === 'og') {
+        if (e.h === 'h') { if (idx === 0) golsTime++; else golsAdv++; }
+        if (e.h === 'a') { if (idx === 1) golsTime++; else golsAdv++; }
+        if (f) { golsTimeHT = idx === 0 ? golsTime : golsTime; golsAdvHT = idx === 0 ? golsAdv : golsAdv; }
+        if (m <= 35 && f) { gol35time = golsTime; gol35adv = golsAdv; }
+      }
+
+      if (e.tp === 'c') {
+        let doTime = (e.h === 'h' && idx === 0) || (e.h === 'a' && idx === 1);
+        if (f) {
+          if (doTime) cantos1T.favor++; else cantos1T.contra++;
+        } else {
+          if (doTime) cantos2T.favor++; else cantos2T.contra++;
+        }
+        if (doTime) cantosTotal.favor++; else cantosTotal.contra++;
+      }
+    }
+
+    let cantosJogoTotal = cantosTotal.favor + cantosTotal.contra;
+    let cantos2Ttotal = cantos2T.favor + cantos2T.contra;
+    let cantos1Ttotal = cantos1T.favor + cantos1T.contra;
+
+    // Score HT
+    // Precisamos recalcular gols no HT
+    let golsH_HT = 0, golsA_HT = 0, golsH_35 = 0, golsA_35 = 0;
+    for (let e of evs) {
+      let m = fmtMin(e.t);
+      if (m === -1) continue;
+      if (!is1T(e.t)) continue;
+      if (e.tp === 'g' || e.tp === 'p' || e.tp === 'og') {
+        if (e.h === 'h') golsH_HT++;
+        if (e.h === 'a') golsA_HT++;
+        if (m <= 35) { if (e.h === 'h') golsH_35++; if (e.h === 'a') golsA_35++; }
+      }
+    }
+
+    let scoreHT_time = idx === 0 ? golsH_HT : golsA_HT;
+    let scoreHT_adv = idx === 0 ? golsA_HT : golsH_HT;
+    let score35_time = idx === 0 ? golsH_35 : golsA_35;
+    let score35_adv = idx === 0 ? golsA_35 : golsH_35;
+
+    // Cantos 37-HT
+    let cantos37HT = 0;
+    for (let e of evs) {
+      let m = fmtMin(e.t);
+      if (e.tp === 'c' && is1T(e.t) && m >= 37) cantos37HT++;
+    }
+
+    // Cantos 70+
+    let cantos70mais = 0, cantos80mais = 0;
+    for (let e of evs) {
+      let m = fmtMin(e.t);
+      if (e.tp === 'c' && !is1T(e.t)) {
+        if (m >= 70) cantos70mais++;
+        if (m >= 80) cantos80mais++;
+      }
+    }
+
+    jogos.push({
+      stats,
+      cantos1T, cantos2T, cantosTotal,
+      cantosJogoTotal, cantos2Ttotal, cantos1Ttotal,
+      cantos37HT, cantos70mais, cantos80mais,
+      scoreHT_time, scoreHT_adv,
+      score35_time, score35_adv,
+      golsTimeHT: scoreHT_time, golsAdvHT: scoreHT_adv,
+      homeName: g.homeName, awayName: g.awayName,
+      score: g.score, date: g.date || g.gamedate || ''
+    });
+  }
+
+  return jogos;
+}
+
+// ===== CALCULAR MÉDIAS =====
+function calcMedias(jogos) {
+  if (!jogos.length) return null;
+  let n = jogos.length;
+  let campos = ['blocked','outsidebox','total_crosses','dangerous_attacks','shots','tackles',
+    'possessiontime','insidebox','fouls','key_passes','accurate_crosses','attacks','saves','corners'];
+
+  let medias = {};
+  for (let c of campos) {
+    let vals = jogos.filter(j => j.stats[c]).map(j => j.stats[c].time);
+    let valsAdv = jogos.filter(j => j.stats[c]).map(j => j.stats[c].adv);
+    medias[c] = { time: avg(vals), adv: avg(valsAdv) };
+  }
+
+  return {
+    medias,
+    cantosTotal: avg(jogos.map(j => j.cantosJogoTotal)),
+    cantosAFavor: avg(jogos.map(j => j.cantosTotal.favor)),
+    cantosContra: avg(jogos.map(j => j.cantosTotal.contra)),
+    cantos1T: avg(jogos.map(j => j.cantos1Ttotal)),
+    cantos2T: avg(jogos.map(j => j.cantos2Ttotal)),
+    count: n
+  };
+}
+
+// ===== CLASSIFICAR PERFIL =====
+function classificarPerfil(medias) {
+  if (!medias) return [];
+  let tags = [], m = medias.medias;
+  if (m.blocked && m.blocked.time >= 4.5) tags.push({ n: '🛡️ Bloqueador', c: 'tag-yellow', k: 'bloqueador' });
+  if (m.possessiontime && m.possessiontime.time <= 42) tags.push({ n: '🧱 Retrancado', c: 'tag-red', k: 'retrancado' });
+  if (m.possessiontime && m.possessiontime.time >= 55) tags.push({ n: '🎯 Dominante', c: 'tag-blue', k: 'dominante' });
+  if (m.dangerous_attacks && m.dangerous_attacks.time >= 40) tags.push({ n: '💥 Ofensivo', c: 'tag-green', k: 'ofensivo' });
+  if (m.dangerous_attacks && m.dangerous_attacks.time <= 25) tags.push({ n: '😴 Passivo', c: 'tag-red', k: 'passivo' });
+  if (m.total_crosses && m.total_crosses.time >= 15) tags.push({ n: '⚔️ Cruzador', c: 'tag-blue', k: 'cruzador' });
+  if (m.outsidebox && m.outsidebox.time >= 5) tags.push({ n: '🎯 Chuta de Fora', c: 'tag-blue', k: 'chutaFora' });
+  if (m.tackles && m.tackles.time >= 14) tags.push({ n: '⚡ Agressivo', c: 'tag-yellow', k: 'agressivo' });
+  if (medias.cantosAFavor >= 5.5) tags.push({ n: '🔥 Produtor Cantos', c: 'tag-green', k: 'produtorCantos' });
+  if (medias.cantosContra >= 5.5) tags.push({ n: '🥅 Cede Cantos', c: 'tag-red', k: 'cedeCantos' });
+  return tags;
+}
+
+// ===== CENÁRIOS DNA =====
+const CENARIOS_DNA = [
+  // 1ºT
+  {
+    id: 'dna_0x0_35_canto_ht',
+    nome: '0x0 aos 35\' → 1+ Canto (37-HT)',
+    desc: 'Empate 0x0 até 35\' + DNA adversário → sai canto até o intervalo',
+    grupo: '1t',
+    filtro: j => j.score35_time === 0 && j.score35_adv === 0,
+    green: j => j.cantos37HT >= 1
+  },
+  {
+    id: 'dna_0x0_35_2cantos_ht',
+    nome: '0x0 aos 35\' → 2+ Cantos (37-HT)',
+    desc: 'Empate 0x0 até 35\' → 2+ cantos no final do 1ºT',
+    grupo: '1t',
+    filtro: j => j.score35_time === 0 && j.score35_adv === 0,
+    green: j => j.cantos37HT >= 2
+  },
+  {
+    id: 'dna_empate_ht_cantos1t',
+    nome: 'Empate HT → 3+ Cantos 1ºT',
+    desc: 'Empate no intervalo (qualquer placar) → 3+ cantos no 1ºT',
+    grupo: '1t',
+    filtro: j => j.scoreHT_time === j.scoreHT_adv,
+    green: j => j.cantos1Ttotal >= 3
+  },
+  {
+    id: 'dna_perdendo_35_canto_ht',
+    nome: 'Perdendo 35\' → 1+ Canto (37-HT)',
+    desc: 'Time perdendo até 35\' + DNA adversário → pressiona e sai canto',
+    grupo: '1t',
+    filtro: j => j.score35_adv > j.score35_time,
+    green: j => j.cantos37HT >= 1
+  },
+  // 2ºT
+  {
+    id: 'dna_0x0_ht_5cantos_2t',
+    nome: '0x0 no HT → 5+ Cantos 2ºT',
+    desc: 'Empate 0x0 no intervalo + DNA adversário → explosão de cantos no 2ºT',
+    grupo: '2t',
+    filtro: j => j.scoreHT_time === 0 && j.scoreHT_adv === 0,
+    green: j => j.cantos2Ttotal >= 5
+  },
+  {
+    id: 'dna_0x0_ht_3cantos_2t',
+    nome: '0x0 no HT → 3+ Cantos 2ºT',
+    desc: 'Empate 0x0 no intervalo → pelo menos 3 cantos no 2ºT',
+    grupo: '2t',
+    filtro: j => j.scoreHT_time === 0 && j.scoreHT_adv === 0,
+    green: j => j.cantos2Ttotal >= 3
+  },
+  {
+    id: 'dna_empate_ht_5cantos_2t',
+    nome: 'Empate HT → 5+ Cantos 2ºT',
+    desc: 'Qualquer empate no intervalo + DNA → 5+ cantos 2ºT',
+    grupo: '2t',
+    filtro: j => j.scoreHT_time === j.scoreHT_adv,
+    green: j => j.cantos2Ttotal >= 5
+  },
+  {
+    id: 'dna_perdendo_ht_5cantos_2t',
+    nome: 'Perdendo HT → 5+ Cantos 2ºT',
+    desc: 'Perdendo no intervalo → reação com 5+ cantos no 2ºT',
+    grupo: '2t',
+    filtro: j => j.scoreHT_adv > j.scoreHT_time,
+    green: j => j.cantos2Ttotal >= 5
+  },
+  {
+    id: 'dna_ganhando_ht_5cantos_2t',
+    nome: 'Ganhando HT → 5+ Cantos 2ºT',
+    desc: 'Ganhando no intervalo → adversário abre e sai cantos',
+    grupo: '2t',
+    filtro: j => j.scoreHT_time > j.scoreHT_adv,
+    green: j => j.cantos2Ttotal >= 5
+  },
+  {
+    id: 'dna_0x0_70_3cantos',
+    nome: '0x0/Empate 69\' → 3+ Cantos 70+',
+    desc: 'Empatado aos 69\' → 3+ cantos nos últimos 20min',
+    grupo: '2t',
+    filtro: j => j.scoreHT_time === j.scoreHT_adv, // aproximação pelo HT
+    green: j => j.cantos70mais >= 3
+  },
+  {
+    id: 'dna_qualquer_80_2cantos',
+    nome: 'Qualquer cenário → 2+ Cantos 80+',
+    desc: 'Independente do placar → 2+ cantos nos últimos 10min',
+    grupo: '2t',
+    filtro: j => true,
+    green: j => j.cantos80mais >= 2
+  },
+  // JOGO TODO
+  {
+    id: 'dna_jogo_9mais',
+    nome: 'Jogo Total → 9+ Cantos',
+    desc: 'DNA combinado → jogo terá 9 ou mais cantos totais',
+    grupo: 'jogo',
+    filtro: j => true,
+    green: j => j.cantosJogoTotal >= 9
+  },
+  {
+    id: 'dna_jogo_10mais',
+    nome: 'Jogo Total → 10+ Cantos',
+    desc: 'DNA combinado → jogo terá 10 ou mais cantos totais',
+    grupo: 'jogo',
+    filtro: j => true,
+    green: j => j.cantosJogoTotal >= 10
+  },
+  {
+    id: 'dna_jogo_11mais',
+    nome: 'Jogo Total → 11+ Cantos',
+    desc: 'DNA combinado → jogo terá 11 ou mais cantos totais',
+    grupo: 'jogo',
+    filtro: j => true,
+    green: j => j.cantosJogoTotal >= 11
+  }
+];
+
+// ===== CALCULAR IMPACTO DE CADA STAT NOS CANTOS =====
+function calcularImpactos(jogos) {
+  let campos = [
+    { k: 'total_crosses', n: '⚔️ Cruzamentos', ref: 15 },
+    { k: 'outsidebox', n: '💥 Chutes Fora Área', ref: 5 },
+    { k: 'blocked', n: '🛡️ Bloqueados (adv)', ref: 4, useAdv: true },
+    { k: 'dangerous_attacks', n: '🔴 Ataques Perigosos', ref: 35 },
+    { k: 'tackles', n: '💪 Tackles (adv)', ref: 12, useAdv: true },
+    { k: 'possessiontime', n: '⚽ Posse', ref: 50 },
+    { k: 'insidebox', n: '📦 Chutes Dentro', ref: 7 },
+    { k: 'key_passes', n: '🔑 Passes Decisivos', ref: 8 }
+  ];
+
+  let impactos = [];
+  for (let c of campos) {
+    let comStat = jogos.filter(j => j.stats[c.k]);
+    if (comStat.length < 4) continue;
+
+    let getVal = j => c.useAdv ? j.stats[c.k].adv : j.stats[c.k].time;
+    let media = avg(comStat.map(j => getVal(j)));
+
+    let acima = comStat.filter(j => getVal(j) >= media);
+    let abaixo = comStat.filter(j => getVal(j) < media);
+
+    let cantosAcima = avg(acima.map(j => j.cantosJogoTotal));
+    let cantosAbaixo = avg(abaixo.map(j => j.cantosJogoTotal));
+    let diff = parseFloat((cantosAcima - cantosAbaixo).toFixed(1));
+
+    impactos.push({
+      ...c,
+      media: media,
+      acima: { cantos: cantosAcima, jogos: acima.length },
+      abaixo: { cantos: cantosAbaixo, jogos: abaixo.length },
+      diff,
+      impacto: diff >= 2.5 ? 'alto' : diff >= 1.0 ? 'medio' : 'baixo'
+    });
+  }
+
+  impactos.sort((a, b) => b.diff - a.diff);
+  return impactos;
+}
+
+// ===== CRUZAR DADOS CASA vs FORA =====
+function cruzarDados(mediasCasa, mediasFora, impactosCasa) {
+  if (!mediasCasa || !mediasFora) return [];
+  let cruzamentos = [];
+
+  for (let imp of impactosCasa) {
+    if (imp.impacto === 'baixo') continue;
+
+    let valAdv;
+    if (imp.useAdv) {
+      // Se o impacto é do adversário (blocked, tackles), pegar stat DO VISITANTE
+      valAdv = mediasFora.medias[imp.k] ? mediasFora.medias[imp.k].time : null;
+    } else {
+      // Se o impacto é do time (cruzamentos), verificar se adversário PERMITE isso
+      valAdv = mediasFora.medias[imp.k] ? mediasFora.medias[imp.k].adv : null;
+    }
+
+    if (valAdv === null) continue;
+
+    let match = valAdv >= imp.media ? 'sim' : valAdv >= imp.media * 0.85 ? 'parcial' : 'nao';
+
+    cruzamentos.push({
+      stat: imp.n,
+      key: imp.k,
+      mediaCasa: imp.media,
+      valAdv,
+      diff: imp.diff,
+      impacto: imp.impacto,
+      cantosQuandoAlto: imp.acima.cantos,
+      cantosQuandoBaixo: imp.abaixo.cantos,
+      match
+    });
+  }
+
+  return cruzamentos;
+}
+
+// ===== CALCULAR DNA SCORE =====
+function calcDNAScore(mediasCasa, mediasFora, cruzamentos, cenarios1T, cenarios2T, cenariosJogo) {
+  let score = 0, maxScore = 0;
+
+  // 1. Cantos produzidos pela casa (peso 2)
+  maxScore += 20;
+  if (mediasCasa) {
+    if (mediasCasa.cantosAFavor >= 6) score += 20;
+    else if (mediasCasa.cantosAFavor >= 5) score += 15;
+    else if (mediasCasa.cantosAFavor >= 4) score += 10;
+    else score += 5;
+  }
+
+  // 2. Cantos cedidos pelo fora (peso 2)
+  maxScore += 20;
+  if (mediasFora) {
+    if (mediasFora.cantosContra >= 6) score += 20;
+    else if (mediasFora.cantosContra >= 5) score += 15;
+    else if (mediasFora.cantosContra >= 4) score += 10;
+    else score += 5;
+  }
+
+  // 3. Cantos totais nos jogos do fora (peso 1.5)
+  maxScore += 15;
+  if (mediasFora) {
+    if (mediasFora.cantosTotal >= 10) score += 15;
+    else if (mediasFora.cantosTotal >= 8) score += 10;
+    else if (mediasFora.cantosTotal >= 6) score += 7;
+    else score += 3;
+  }
+
+  // 4. Cruzamentos (matches) (peso 2)
+  maxScore += 20;
+  let totalMatches = cruzamentos.length;
+  let matches = cruzamentos.filter(c => c.match === 'sim').length;
+  let parciais = cruzamentos.filter(c => c.match === 'parcial').length;
+  if (totalMatches > 0) {
+    score += Math.round(((matches + parciais * 0.5) / totalMatches) * 20);
+  }
+
+  // 5. Cenários verdes (peso 2.5)
+  maxScore += 25;
+  let allCenarios = [...cenarios1T, ...cenarios2T, ...cenariosJogo].filter(c => c.aptos > 0);
+  if (allCenarios.length > 0) {
+    let mediaP = avg(allCenarios.map(c => c.pctVal));
+    if (mediaP >= 70) score += 25;
+    else if (mediaP >= 55) score += 18;
+    else if (mediaP >= 40) score += 12;
+    else score += 5;
+  }
+
+  let final10 = maxScore > 0 ? parseFloat(((score / maxScore) * 10).toFixed(1)) : 0;
+  return { score: final10, raw: score, max: maxScore };
+}
+
+// ===== RENDER =====
+function renderPerfil(medias, tags, nome, tipo, jogos) {
+  let corTitulo = tipo === 'casa' ? '#38bdf8' : '#a78bfa';
+  let icone = tipo === 'casa' ? '🏠' : '✈️';
+  let tipoLabel = tipo === 'casa' ? 'em CASA' : 'FORA';
+
+  let h = `<div class="dna-perfil"><div class="dna-perfil-header">
+    <span class="dna-team" style="color:${corTitulo}">${icone} ${nome} — ${tipoLabel} (${medias.count} jogos)</span>
+    <div class="dna-tags">${tags.map(t => `<span class="tag ${t.c}">${t.n}</span>`).join('')}</div></div>`;
+
+  h += '<div class="dna-stats-grid">';
+  h += renderStat('Cantos Total/jogo', medias.cantosTotal, medias.cantosTotal >= 9 ? '#00B37E' : medias.cantosTotal >= 7 ? '#FBA94C' : '#f75a68');
+  h += renderStat(tipo === 'casa' ? 'Cantos a Favor' : 'Cantos Produzidos', medias.cantosAFavor, medias.cantosAFavor >= 5.5 ? '#00B37E' : '#FBA94C');
+  h += renderStat(tipo === 'casa' ? 'Cantos Cedidos' : 'Cantos Cedidos', medias.cantosContra, medias.cantosContra >= 5.5 ? '#f75a68' : '#FBA94C');
+  h += renderStat('Cantos 1ºT', medias.cantos1T, '#e1e1e6');
+  h += renderStat('Cantos 2ºT', medias.cantos2T, '#e1e1e6');
+
+  // Stats chave
+  let statsChave = ['dangerous_attacks','total_crosses','outsidebox','blocked','tackles','possessiontime'];
+  for (let k of statsChave) {
+    if (medias.medias[k]) {
+      let nomes = { dangerous_attacks: 'Ataq. Perigosos', total_crosses: 'Cruzamentos', outsidebox: 'Chutes Fora', blocked: 'Bloqueios', tackles: 'Tackles', possessiontime: 'Posse %' };
+      h += renderStat(nomes[k] || k, medias.medias[k].time, '#e1e1e6', `Adv: ${medias.medias[k].adv}`);
+    }
+  }
+  h += '</div></div>';
+  return h;
+}
+
+function renderStat(label, valor, cor, sub) {
+  return `<div class="dna-stat-item"><div class="dna-stat-label">${label}</div>
+    <div class="dna-stat-valor" style="color:${cor || '#e1e1e6'}">${valor}</div>
+    ${sub ? `<div class="dna-stat-sub">${sub}</div>` : ''}</div>`;
+}
+
+function renderImpactos(impactos) {
+  if (!impactos.length) return '';
+  let h = '<div class="dna-impacto"><div class="dna-impacto-title">📊 Impacto das Stats nos Cantos (Casa)</div>';
+  for (let imp of impactos) {
+    let corImp = imp.impacto === 'alto' ? '#00B37E' : imp.impacto === 'medio' ? '#FBA94C' : '#f75a68';
+    let emoji = imp.impacto === 'alto' ? '🔥' : imp.impacto === 'medio' ? '⚠️' : '❄️';
+    let pctBar = Math.min(100, Math.round((imp.diff / 5) * 100));
+    h += `<div class="dna-impacto-row">
+      <span>${imp.n} (média: ${imp.media.toFixed(1)})</span>
+      <span>Acima: <b style="color:#00B37E">${imp.acima.cantos}</b> cantos (${imp.acima.jogos}j) | Abaixo: <b style="color:#f75a68">${imp.abaixo.cantos}</b> (${imp.abaixo.jogos}j)</span>
+      <span style="color:${corImp};font-weight:700">${emoji} ${imp.impacto.toUpperCase()} (+${imp.diff})
+        <div class="bar-bg"><div class="bar-fill" style="width:${pctBar}%;background:${corImp}"></div></div></span></div>`;
+  }
+  h += '</div>';
+  return h;
+}
+
+function renderCruzamentos(cruzamentos) {
+  if (!cruzamentos.length) return '';
+  let h = '<div class="cruzamento-box"><div class="dna-impacto-title">🔥 Cruzamento: Adversário favorece cantos?</div>';
+  for (let c of cruzamentos) {
+    let matchCor = c.match === 'sim' ? 'match-sim' : c.match === 'parcial' ? 'match-parcial' : 'match-nao';
+    let matchTxt = c.match === 'sim' ? '✅ MATCH' : c.match === 'parcial' ? '⚠️ PARCIAL' : '❌ NÃO';
+    h += `<div class="cruzamento-row">
+      <span class="cruzamento-label">${c.stat}</span>
+      <span>Adv: <b>${c.valAdv.toFixed(1)}</b> vs Média: <b>${c.mediaCasa.toFixed(1)}</b> → Quando alto: <b style="color:#00B37E">${c.cantosQuandoAlto}</b> cantos</span>
+      <span class="cruzamento-match ${matchCor}">${matchTxt}</span></div>`;
+  }
+  h += '</div>';
+  return h;
+}
+
+function renderCenarios(cenarios, grupo, titulo, corClasse) {
+  let h = `<div class="cenario-grupo"><div class="cenario-grupo-header ${corClasse}">${titulo}</div><div class="cenario-list">`;
+  let sorted = cenarios.sort((a, b) => b.pctVal - a.pctVal);
+
+  for (let c of sorted) {
+    if (c.aptos === 0) {
+      h += `<div class="cenario-row cenario-sem-dados"><div class="cenario-icon">📭</div>
+        <div class="cenario-info"><div class="cenario-nome">${c.nome}</div><div class="cenario-desc">${c.desc}</div></div>
+        <div class="cenario-resultado"><div class="cenario-pct" style="color:#7c7c8a">N/A</div><div class="cenario-fraction">0 jogos</div></div></div>`;
+      continue;
+    }
+    let cor = corPct(c.pctVal);
+    let conf = confLabel(c.aptos);
+    let emoji = c.pctVal >= 70 ? '🟢' : c.pctVal >= 50 ? '🟡' : '🔴';
+    h += `<div class="cenario-row"><div class="cenario-icon">${emoji}</div>
+      <div class="cenario-info"><div class="cenario-nome">${c.nome}</div><div class="cenario-desc">${c.desc}</div>
+        <div class="cenario-dna-tags">${c.dnaTags.map(t => `<span class="cenario-dna-tag">${t}</span>`).join('')}</div></div>
+      <div class="cenario-resultado"><div class="cenario-pct" style="color:${cor}">${c.pctVal}%</div>
+        <div class="cenario-fraction">${c.greens}/${c.aptos}</div>
+        <div class="cenario-confianca"><span class="tag ${conf.c}">${conf.t}</span></div></div></div>`;
+  }
+  h += '</div></div>';
+  return h;
+}
+
+function renderDNAScore(dnaScore) {
+  let cor = dnaScore.score >= 7 ? '#00B37E' : dnaScore.score >= 5 ? '#FBA94C' : '#f75a68';
+  let label = dnaScore.score >= 8 ? '🔥 MUITO FAVORÁVEL' : dnaScore.score >= 6.5 ? '✅ FAVORÁVEL' : dnaScore.score >= 5 ? '⚠️ MODERADO' : '❌ DESFAVORÁVEL';
+  let pctBar = Math.round((dnaScore.score / 10) * 100);
+  return `<div class="dna-score-box">
+    <div style="font-size:12px;color:#a8a8b3;text-transform:uppercase;letter-spacing:1px">🧬 DNA Score</div>
+    <div class="dna-score-valor" style="color:${cor}">${dnaScore.score}/10</div>
+    <div class="dna-score-barra"><div class="dna-score-fill" style="width:${pctBar}%;background:${cor}"></div></div>
+    <div class="dna-score-label" style="color:${cor}">${label}</div>
+    <div class="dna-score-detalhe">Pontuação: ${dnaScore.raw}/${dnaScore.max}</div></div>`;
+}
+
+// ===== TELEGRAM =====
+function montarTelegram(homeName, awayName, mediasCasa, mediasFora, tagsCasa, tagsFora, impactos, cruzamentos, cenarios1T, cenarios2T, cenariosJogo, dnaScore) {
+  let m = '━━━━━━━━━━━━━━━━\n🧬 <b>DNA CENÁRIOS</b>\n━━━━━━━━━━━━━━━━\n\n';
+  m += `⚽ <b>${homeName} vs ${awayName}</b>\n\n`;
+
+  // Score
+  let label = dnaScore.score >= 8 ? '🔥 MUITO FAVORÁVEL' : dnaScore.score >= 6.5 ? '✅ FAVORÁVEL' : dnaScore.score >= 5 ? '⚠️ MODERADO' : '❌ DESFAVORÁVEL';
+  m += `🧬 <b>DNA Score: ${dnaScore.score}/10 — ${label}</b>\n\n`;
+
+  // Perfis
+  m += `🏠 <b>${homeName} (Casa)</b>\n`;
+  m += `  Cantos: ${mediasCasa.cantosTotal}/jogo | Favor: ${mediasCasa.cantosAFavor} | Cedidos: ${mediasCasa.cantosContra}\n`;
+  if (tagsCasa.length) m += `  ${tagsCasa.map(t => t.n).join(' ')}\n`;
+  m += `\n✈️ <b>${awayName} (Fora)</b>\n`;
+  m += `  Cantos: ${mediasFora.cantosTotal}/jogo | Produz: ${mediasFora.cantosAFavor} | Cede: ${mediasFora.cantosContra}\n`;
+  if (tagsFora.length) m += `  ${tagsFora.map(t => t.n).join(' ')}\n`;
+
+  // Cruzamento
+  if (cruzamentos.length) {
+    m += '\n🔥 <b>Cruzamento DNA</b>\n';
+    for (let c of cruzamentos) {
+      let e = c.match === 'sim' ? '✅' : c.match === 'parcial' ? '⚠️' : '❌';
+      m += `  ${e} ${c.stat}: Adv ${c.valAdv.toFixed(1)} vs ${c.mediaCasa.toFixed(1)} → ${c.cantosQuandoAlto} cantos\n`;
+    }
+  }
+
+  // Cenários
+  let renderC = (titulo, lista) => {
+    let comDados = lista.filter(c => c.aptos > 0).sort((a, b) => b.pctVal - a.pctVal);
+    if (!comDados.length) return '';
+    let t = `\n<b>${titulo}</b>\n`;
+    for (let c of comDados) {
+      let e = c.pctVal >= 70 ? '🟢' : c.pctVal >= 50 ? '🟡' : '🔴';
+      t += `  ${e} ${c.nome} — <b>${c.pctVal}%</b> (${c.greens}/${c.aptos})\n`;
+    }
+    return t;
+  };
+  m += renderC('⏱️ 1º TEMPO', cenarios1T);
+  m += renderC('⏱️ 2º TEMPO', cenarios2T);
+  m += renderC('⚽ JOGO TODO', cenariosJogo);
+
+  m += '\n⏰ ' + new Date().toLocaleString('pt-BR');
+  return m;
+}
+
+async function enviarTelegram() {
+  if (!ultimoTg) return;
+  let b = document.getElementById('btnTg'), s = document.getElementById('tgStatus');
+  b.disabled = true; s.style.display = 'block'; s.innerText = 'Enviando...';
+  try {
+    let r = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TG_CHAT_ID, text: ultimoTg, parse_mode: 'HTML', disable_web_page_preview: true })
+    });
+    let d = await r.json();
+    if (d.ok) { s.innerText = '✅ Enviado!'; s.style.color = '#00B37E'; }
+    else throw new Error(d.description);
+  } catch (e) { s.innerText = '❌ ' + e.message; s.style.color = '#f75a68'; b.disabled = false; }
+}
+
+// ===== EXECUTAR =====
+async function executar() {
+  let gid = document.getElementById('gameId').value.trim();
+  if (!gid) { alert('Cole o ID!'); return; }
+
+  document.getElementById('btnAnalise').disabled = true;
+  document.getElementById('prog').style.display = 'block';
+  document.getElementById('progBar').style.width = '5%';
+  document.getElementById('status').innerText = '🔍 Buscando jogo...';
+  document.getElementById('resultado').style.display = 'none';
+  document.getElementById('btnTg').style.display = 'none';
+  ultimoTg = null;
+
+  try {
+    // 1. Jogo base
+    let dataBase = await fetchAPI(gid, 'games=20');
+    let game = dataBase.game;
+    let homeName = game.homeName, awayName = game.awayName;
+    document.getElementById('progBar').style.width = '15%';
+    document.getElementById('status').innerText = `⚽ ${homeName} vs ${awayName} — Buscando histórico...`;
+
+    // 2. IDs
+    let idsCasa = (dataBase.lastGames.home.asHome || []).map(g => g.id).filter(x => x);
+    let idsFora = (dataBase.lastGames.away.asAway || []).map(g => g.id).filter(x => x);
+    document.getElementById('status').innerText = `📊 Casa: ${idsCasa.length} | Fora: ${idsFora.length} — Carregando...`;
+
+    // 3. Buscar detalhes
+    let total = idsCasa.length + idsFora.length, done = 0;
+    let dadosCasa = await lotes(idsCasa, async id => {
+      let d = await fetchAPI(id, '');
+      done++; document.getElementById('progBar').style.width = (15 + (done / total) * 55) + '%';
+      return d;
+    });
+    let dadosFora = await lotes(idsFora, async id => {
+      let d = await fetchAPI(id, '');
+      done++; document.getElementById('progBar').style.width = (15 + (done / total) * 55) + '%';
+      return d;
+    });
+
+    document.getElementById('progBar').style.width = '75%';
+    document.getElementById('status').innerText = '🧬 Extraindo DNA...';
+
+    // 4. Extrair DNA
+    let jogosCasa = extrairDNA(dadosCasa, 'home');
+    let jogosFora = extrairDNA(dadosFora, 'away');
+
+    // 5. Médias
+    let mediasCasa = calcMedias(jogosCasa);
+    let mediasFora = calcMedias(jogosFora);
+
+    // 6. Perfil
+    let tagsCasa = classificarPerfil(mediasCasa);
+    let tagsFora = classificarPerfil(mediasFora);
+
+    // 7. Impactos
+    let impactosCasa = calcularImpactos(jogosCasa);
+
+    // 8. Cruzamento
+    let cruzamentos = cruzarDados(mediasCasa, mediasFora, impactosCasa);
+
+    document.getElementById('progBar').style.width = '85%';
+    document.getElementById('status').innerText = '📊 Calculando cenários...';
+
+    // 9. Rodar cenários no histórico da CASA
+    let resultadosCenarios = [];
+    for (let cen of CENARIOS_DNA) {
+      let aptos = 0, greens = 0;
+      for (let j of jogosCasa) {
+        if (cen.filtro(j)) {
+          aptos++;
+          if (cen.green(j)) greens++;
+        }
+      }
+      let pctVal = pct(greens, aptos);
+      let dnaTags = [];
+      if (tagsFora.find(t => t.k === 'bloqueador')) dnaTags.push('vs Bloqueador');
+      if (tagsFora.find(t => t.k === 'retrancado')) dnaTags.push('vs Retrancado');
+      if (tagsFora.find(t => t.k === 'cedeCantos')) dnaTags.push('Cede Cantos');
+      if (tagsFora.find(t => t.k === 'passivo')) dnaTags.push('vs Passivo');
+      if (tagsFora.find(t => t.k === 'ofensivo')) dnaTags.push('vs Ofensivo');
+
+      resultadosCenarios.push({ ...cen, aptos, greens, pctVal: pctVal >= 0 ? pctVal : 0, dnaTags });
+    }
+
+    let cenarios1T = resultadosCenarios.filter(c => c.grupo === '1t');
+    let cenarios2T = resultadosCenarios.filter(c => c.grupo === '2t');
+    let cenariosJogo = resultadosCenarios.filter(c => c.grupo === 'jogo');
+
+    // 10. DNA Score
+    let dnaScore = calcDNAScore(mediasCasa, mediasFora, cruzamentos, cenarios1T, cenarios2T, cenariosJogo);
+
+    document.getElementById('progBar').style.width = '95%';
+
+    // 11. RENDER
+    let html = '';
+
+    // Header
+    html += `<div class="dna-header"><h2>🧬 DNA Análise Completa</h2>
+      <div class="dna-match">${homeName} vs ${awayName}</div>
+      <div class="dna-sub">Casa: ${jogosCasa.length} jogos | Fora: ${jogosFora.length} jogos</div></div>`;
+
+    // DNA Score
+    html += renderDNAScore(dnaScore);
+
+    // Perfis
+    html += renderPerfil(mediasCasa, tagsCasa, homeName, 'casa', jogosCasa);
+    html += renderPerfil(mediasFora, tagsFora, awayName, 'fora', jogosFora);
+
+    // Impacto Stats
+    html += renderImpactos(impactosCasa);
+
+    // Cruzamento
+    html += renderCruzamentos(cruzamentos);
+
+    // Cenários
+    html += renderCenarios(cenarios1T, '1t', '⏱️ 1º TEMPO — Cenários DNA', 'cenario-grupo-1t');
+    html += renderCenarios(cenarios2T, '2t', '⏱️ 2º TEMPO — Cenários DNA', 'cenario-grupo-2t');
+    html += renderCenarios(cenariosJogo, 'jogo', '⚽ JOGO TODO — Cenários DNA', 'cenario-grupo-jogo');
+
+    document.getElementById('resultado').innerHTML = html;
+    document.getElementById('resultado').style.display = 'block';
+
+    // Telegram
+    ultimoTg = montarTelegram(homeName, awayName, mediasCasa, mediasFora, tagsCasa, tagsFora, impactosCasa, cruzamentos, cenarios1T, cenarios2T, cenariosJogo, dnaScore);
+    document.getElementById('btnTg').style.display = 'inline-block';
+    document.getElementById('btnTg').disabled = false;
+
+    document.getElementById('progBar').style.width = '100%';
+    document.getElementById('status').innerText = `✅ DNA completo! Casa: ${jogosCasa.length} jogos | Fora: ${jogosFora.length} jogos`;
+
+  } catch (e) {
+    document.getElementById('status').innerText = '❌ Erro: ' + e.message;
+    console.error(e);
+  }
+
+  document.getElementById('btnAnalise').disabled = false;
+}
+</script>
+</body>
+</html>
