@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Debug - Stats Adversário</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+body{font-family:'Inter',sans-serif;background:#121214;color:#fff;padding:20px;margin:0}
+.container{max-width:1100px;margin:0 auto}
+.card{background:#202024;padding:20px;border-radius:12px;border:1px solid #323238;margin-bottom:20px}
+h1{font-size:1.4rem;color:#00875f;margin-top:0}
+h2{font-size:1.1rem;color:#38bdf8;margin:15px 0 10px}
+h3{font-size:1rem;color:#a78bfa;margin:12px 0 8px}
+.row-flex{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.input-small{background:#121214;color:#fff;border:1px solid #323238;padding:10px 12px;border-radius:8px;font-size:14px;outline:none;min-width:200px}
+.input-small:focus{border-color:#00875f}
+button{background:#00875f;color:#fff;border:none;padding:12px 22px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px}
+button:hover{background:#015f43}
+button:disabled{background:#323238;color:#7c7c8a;cursor:not-allowed}
+.status{font-size:13px;color:#a8a8b3;margin-top:10px}
+.progress{width:100%;height:8px;background:#323238;border-radius:4px;margin-top:10px;overflow:hidden;display:none}
+.progress-bar{height:100%;background:#38bdf8;width:0%;transition:width .3s}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+th{background:#1c1c1f;color:#a8a8b3;text-align:left;padding:10px 8px;border-bottom:2px solid #323238;position:sticky;top:0}
+td{padding:8px;border-bottom:1px solid #29292e}
+tr:hover{background:#1c1c1f}
+.val-alto{color:#00B37E;font-weight:700}
+.val-medio{color:#FBA94C;font-weight:700}
+.val-baixo{color:#f75a68;font-weight:700}
+.val-neutro{color:#e1e1e6}
+.tag{padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600;display:inline-block}
+.tag-green{background:#00875f22;color:#00B37E;border:1px solid #00875f55}
+.tag-yellow{background:#c4760022;color:#FBA94C;border:1px solid #c4760055}
+.tag-red{background:#f7345822;color:#f75a68;border:1px solid #f7345855}
+.tag-blue{background:#38bdf822;color:#38bdf8;border:1px solid #38bdf855}
+.resumo-box{background:#1c1c1f;border:1px solid #00875f;border-radius:10px;padding:16px;margin-bottom:20px}
+.resumo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px}
+.resumo-item{background:#121214;border:1px solid #323238;border-radius:8px;padding:12px;text-align:center}
+.resumo-label{font-size:11px;color:#a8a8b3;text-transform:uppercase;letter-spacing:.5px}
+.resumo-valor{font-size:1.5rem;font-weight:700;margin-top:4px}
+.resumo-sub{font-size:11px;color:#7c7c8a;margin-top:2px}
+.perfil-tag{font-size:1.2rem;font-weight:700;padding:6px 16px;border-radius:8px;display:inline-block;margin:8px 4px}
+.section{display:none}
+.section.active{display:block}
+.tabs{display:flex;gap:0;margin-bottom:15px}
+.tab{flex:1;padding:10px;text-align:center;background:#1c1c1f;border:1px solid #323238;color:#a8a8b3;font-weight:600;font-size:12px;cursor:pointer}
+.tab:first-child{border-radius:8px 0 0 8px}
+.tab:last-child{border-radius:0 8px 8px 0}
+.tab.active{background:#00875f;color:#fff;border-color:#00875f}
+.correlacao-box{background:#121214;border:1px solid #323238;border-radius:8px;padding:12px;margin-top:10px}
+.correlacao-titulo{font-size:12px;color:#a8a8b3;font-weight:600;margin-bottom:8px;text-transform:uppercase}
+.correlacao-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1e1e22;font-size:13px}
+.correlacao-row:last-child{border-bottom:none}
+.bar-container{width:120px;height:8px;background:#323238;border-radius:4px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:8px}
+.bar-fill{height:100%;border-radius:4px}
+.json-toggle{background:#1c1c1f;border:1px solid #323238;color:#38bdf8;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;margin-top:8px}
+.json-box{background:#0d0d0f;border:1px solid #323238;border-radius:8px;padding:12px;margin-top:8px;max-height:400px;overflow:auto;font-size:11px;font-family:monospace;display:none;white-space:pre-wrap;word-break:break-all}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>🔬 Debug — Stats & Perfil do Adversário</h1>
+    <p style="color:#a8a8b3;font-size:13px">Analisa os dados estatísticos disponíveis para criar cenários baseados em perfil de jogo.</p>
+    <div class="row-flex">
+      <input id="gameId" class="input-small" placeholder="ID do Jogo">
+      <button id="btnAnalise" onclick="executarDebug()">🔍 Analisar</button>
+    </div>
+    <div class="progress" id="prog"><div class="progress-bar" id="progBar"></div></div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div id="resultado" style="display:none">
+    <!-- RESUMO DO JOGO -->
+    <div class="card" id="cardResumo"></div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('casa')">🏠 Casa (Mandante)</div>
+      <div class="tab" onclick="switchTab('fora')">✈️ Fora (Visitante)</div>
+      <div class="tab" onclick="switchTab('cruzamento')">🔥 Cruzamento</div>
+      <div class="tab" onclick="switchTab('json')">📦 JSON Raw</div>
+    </div>
+
+    <!-- ABA CASA -->
+    <div class="section active" id="secCasa"></div>
+
+    <!-- ABA FORA -->
+    <div class="section" id="secFora"></div>
+
+    <!-- ABA CRUZAMENTO -->
+    <div class="section" id="secCruzamento"></div>
+
+    <!-- ABA JSON -->
+    <div class="section" id="secJson"></div>
+  </div>
+</div>
+
+<script>
+const TOKEN = '45003_ec8357116e';
+const PARALLEL = 5;
+
+// ===== API =====
+async function fetchAPI(id, extra) {
+  let u = `https://cornerprobet.com/api/v3/getAnalysis.php?gameId=${id}&token=${TOKEN}`;
+  if (extra) u += `&${extra}`;
+  let r = await fetch(u);
+  return await r.json();
+}
+
+async function lotes(ids, fn) {
+  let r = [];
+  for (let i = 0; i < ids.length; i += PARALLEL) {
+    let batch = ids.slice(i, i + PARALLEL);
+    let results = await Promise.all(batch.map(id => fn(id).catch(e => null)));
+    r.push(...results);
+  }
+  return r;
+}
+
+// ===== EXTRAIR STATS DE UM JOGO =====
+function extrairStats(data) {
+  if (!data || !data.game) return null;
+  let g = data.game;
+
+  // Stats gerais
+  let stats = {};
+  let campos = ['attacks','dangerous_attacks','off_target','on_target','blocked','shots','corners',
+    'goals','possessiontime','insidebox','outsidebox','passes','fouls','tackles',
+    'total_crosses','interceptions','accurate_crosses','key_passes','saves',
+    'redcards','yellowcards','long_passes','successful_long_passes','dribble_attempts','successful_dribbles'];
+
+  if (g.stats) {
+    for (let c of campos) {
+      if (g.stats[c]) {
+        stats[c] = { home: g.stats[c][0] || 0, away: g.stats[c][1] || 0 };
+      }
+    }
+  }
+
+  // Cantos por tempo
+  let cornerTotal = { first: { h: 0, a: 0, t: 0 }, second: { h: 0, a: 0, t: 0 }, total: { h: 0, a: 0, t: 0 } };
+  if (g.totalCorner) {
+    let tc = g.totalCorner;
+    if (tc.first) { cornerTotal.first = { h: tc.first.h || 0, a: tc.first.a || 0, t: tc.first.t || 0 } }
+    if (tc.second) { cornerTotal.second = { h: tc.second.h || 0, a: tc.second.a || 0, t: tc.second.t || 0 } }
+    if (tc.total) { cornerTotal.total = { h: tc.total.h || 0, a: tc.total.a || 0, t: tc.total.t || 0 } }
+  }
+
+  // Corner intervals
+  let cornerIntervals = g.cornerIntervals || {};
+
+  // Shot intervals
+  let shotIntervals = g.shotIntervals || {};
+
+  // Halfs (stats por tempo)
+  let halfs = {};
+  if (g.otherLiveStats && g.otherLiveStats.halfs) {
+    halfs = g.otherLiveStats.halfs;
+  }
+
+  // Pressure
+  let pressure = {};
+  if (g.otherLiveStats && g.otherLiveStats.pi) {
+    pressure = g.otherLiveStats.pi;
+  }
+
+  // Per minute
+  let perMinute = {};
+  if (g.otherLiveStats && g.otherLiveStats.perMinute) {
+    perMinute = g.otherLiveStats.perMinute;
+  }
+
+  // Gols
+  let goalsHome = 0, goalsAway = 0;
+  if (g.stats && g.stats.goals) { goalsHome = g.stats.goals[0] || 0; goalsAway = g.stats.goals[1] || 0; }
+
+  return {
+    homeName: g.homeName,
+    awayName: g.awayName,
+    score: g.score || `${goalsHome}-${goalsAway}`,
+    date: g.date || g.gamedate || '',
+    stats,
+    cornerTotal,
+    cornerIntervals,
+    shotIntervals,
+    halfs,
+    pressure,
+    perMinute,
+    goalsHome,
+    goalsAway,
+    raw: g
+  };
+}
+
+// ===== CALCULAR MÉDIAS DO HISTÓRICO =====
+function calcularMedias(jogosData, tipo) {
+  // tipo: 'home' = time jogando em casa, 'away' = time jogando fora
+  let campos = ['blocked','outsidebox','total_crosses','dangerous_attacks','shots',
+    'tackles','possessiontime','insidebox','fouls','key_passes','accurate_crosses',
+    'corners','attacks','saves','yellowcards'];
+
+  let somas = {};
+  campos.forEach(c => somas[c] = { time: 0, adversario: 0 });
+  let somaCantos = { aFavor: 0, contra: 0, total: 0 };
+  let somaCantos1T = { aFavor: 0, contra: 0, total: 0 };
+  let somaCantos2T = { aFavor: 0, contra: 0, total: 0 };
+  let count = 0;
+  let jogosDetalhados = [];
+
+  for (let d of jogosData) {
+    if (!d) continue;
+    let s = extrairStats(d);
+    if (!s || !s.stats.corners) continue;
+    count++;
+
+    let idxTime = tipo === 'home' ? 'home' : 'away';
+    let idxAdv = tipo === 'home' ? 'away' : 'home';
+
+    for (let c of campos) {
+      if (s.stats[c]) {
+        somas[c].time += s.stats[c][idxTime] || 0;
+        somas[c].adversario += s.stats[c][idxAdv] || 0;
+      }
+    }
+
+    // Cantos
+    let cantosAFavor = tipo === 'home' ? s.cornerTotal.total.h : s.cornerTotal.total.a;
+    let cantosContra = tipo === 'home' ? s.cornerTotal.total.a : s.cornerTotal.total.h;
+    somaCantos.aFavor += cantosAFavor;
+    somaCantos.contra += cantosContra;
+    somaCantos.total += (cantosAFavor + cantosContra);
+
+    // Cantos 1T
+    let cantos1T_favor = tipo === 'home' ? s.cornerTotal.first.h : s.cornerTotal.first.a;
+    let cantos1T_contra = tipo === 'home' ? s.cornerTotal.first.a : s.cornerTotal.first.h;
+    somaCantos1T.aFavor += cantos1T_favor;
+    somaCantos1T.contra += cantos1T_contra;
+    somaCantos1T.total += (cantos1T_favor + cantos1T_contra);
+
+    // Cantos 2T
+    let cantos2T_favor = tipo === 'home' ? s.cornerTotal.second.h : s.cornerTotal.second.a;
+    let cantos2T_contra = tipo === 'home' ? s.cornerTotal.second.a : s.cornerTotal.second.h;
+    somaCantos2T.aFavor += cantos2T_favor;
+    somaCantos2T.contra += cantos2T_contra;
+    somaCantos2T.total += (cantos2T_favor + cantos2T_contra);
+
+    jogosDetalhados.push({
+      jogo: `${s.homeName} ${s.score} ${s.awayName}`,
+      date: s.date,
+      cantosAFavor,
+      cantosContra,
+      cantosTotal: cantosAFavor + cantosContra,
+      stats: s.stats,
+      tipo: idxTime
+    });
+  }
+
+  if (count === 0) return null;
+
+  let medias = {};
+  campos.forEach(c => {
+    medias[c] = {
+      time: parseFloat((somas[c].time / count).toFixed(1)),
+      adversario: parseFloat((somas[c].adversario / count).toFixed(1))
+    };
+  });
+
+  return {
+    count,
+    medias,
+    cantos: {
+      total: { media: parseFloat((somaCantos.total / count).toFixed(1)), soma: somaCantos.total },
+      aFavor: { media: parseFloat((somaCantos.aFavor / count).toFixed(1)), soma: somaCantos.aFavor },
+      contra: { media: parseFloat((somaCantos.contra / count).toFixed(1)), soma: somaCantos.contra }
+    },
+    cantos1T: {
+      total: { media: parseFloat((somaCantos1T.total / count).toFixed(1)) },
+      aFavor: { media: parseFloat((somaCantos1T.aFavor / count).toFixed(1)) },
+      contra: { media: parseFloat((somaCantos1T.contra / count).toFixed(1)) }
+    },
+    cantos2T: {
+      total: { media: parseFloat((somaCantos2T.total / count).toFixed(1)) },
+      aFavor: { media: parseFloat((somaCantos2T.aFavor / count).toFixed(1)) },
+      contra: { media: parseFloat((somaCantos2T.contra / count).toFixed(1)) }
+    },
+    jogos: jogosDetalhados
+  };
+}
+
+// ===== CLASSIFICAR PERFIL =====
+function classificarPerfil(medias) {
+  if (!medias) return { perfil: 'desconhecido', tags: [] };
+  let tags = [];
+  let m = medias.medias;
+
+  // Bloqueador
+  if (m.blocked && m.blocked.time >= 4.5) tags.push({ nome: '🛡️ Bloqueador', tipo: 'defensivo', cor: 'tag-yellow' });
+  // Retrancado
+  if (m.possessiontime && m.possessiontime.time <= 42) tags.push({ nome: '🧱 Retrancado', tipo: 'defensivo', cor: 'tag-red' });
+  // Ofensivo
+  if (m.dangerous_attacks && m.dangerous_attacks.time >= 40) tags.push({ nome: '💥 Ofensivo', tipo: 'ofensivo', cor: 'tag-green' });
+  // Cruzador
+  if (m.total_crosses && m.total_crosses.time >= 15) tags.push({ nome: '⚔️ Cruzador', tipo: 'ofensivo', cor: 'tag-blue' });
+  // Chutador de fora
+  if (m.outsidebox && m.outsidebox.time >= 5) tags.push({ nome: '🎯 Chuta de Fora', tipo: 'ofensivo', cor: 'tag-blue' });
+  // Aggressivo
+  if (m.tackles && m.tackles.time >= 14) tags.push({ nome: '⚡ Agressivo', tipo: 'defensivo', cor: 'tag-yellow' });
+  // Passivo
+  if (m.dangerous_attacks && m.dangerous_attacks.time <= 25) tags.push({ nome: '😴 Passivo', tipo: 'defensivo', cor: 'tag-red' });
+  // Muitos cantos
+  if (medias.cantos.aFavor.media >= 5.5) tags.push({ nome: '🔥 Produtor de Cantos', tipo: 'cantos', cor: 'tag-green' });
+  // Cede muitos cantos
+  if (medias.cantos.contra.media >= 5.5) tags.push({ nome: '🥅 Cede Cantos', tipo: 'cantos', cor: 'tag-red' });
+
+  return { tags };
+}
+
+// ===== RENDER MÉDIAS =====
+function renderMedias(medias, titulo, containerId) {
+  if (!medias) {
+    document.getElementById(containerId).innerHTML = `<div class="card"><h2>${titulo}</h2><p style="color:#7c7c8a">Sem dados disponíveis</p></div>`;
+    return;
+  }
+
+  let perfil = classificarPerfil(medias);
+  let h = `<div class="card"><h2>${titulo}</h2>`;
+  h += `<p style="color:#a8a8b3;font-size:12px">${medias.count} jogos analisados</p>`;
+
+  // Tags de perfil
+  if (perfil.tags.length) {
+    h += '<div style="margin:10px 0">';
+    perfil.tags.forEach(t => h += `<span class="tag ${t.cor}">${t.nome}</span> `);
+    h += '</div>';
+  }
+
+  // Resumo de cantos
+  h += '<div class="resumo-grid">';
+  h += renderResumoItem('Cantos Total/jogo', medias.cantos.total.media, '', medias.cantos.total.media >= 9 ? '#00B37E' : medias.cantos.total.media >= 7 ? '#FBA94C' : '#f75a68');
+  h += renderResumoItem('Cantos a Favor/jogo', medias.cantos.aFavor.media, '', medias.cantos.aFavor.media >= 5.5 ? '#00B37E' : medias.cantos.aFavor.media >= 4 ? '#FBA94C' : '#f75a68');
+  h += renderResumoItem('Cantos Contra/jogo', medias.cantos.contra.media, '', medias.cantos.contra.media >= 5.5 ? '#f75a68' : '#FBA94C');
+  h += renderResumoItem('Cantos 1ºT', medias.cantos1T.total.media, `Favor: ${medias.cantos1T.aFavor.media} | Contra: ${medias.cantos1T.contra.media}`);
+  h += renderResumoItem('Cantos 2ºT', medias.cantos2T.total.media, `Favor: ${medias.cantos2T.aFavor.media} | Contra: ${medias.cantos2T.contra.media}`);
+  h += '</div>';
+
+  // Tabela de stats
+  h += '<h3>📊 Médias por Jogo</h3>';
+  h += '<table><tr><th>Stat</th><th>Time</th><th>Adversário</th><th>Visual</th></tr>';
+
+  let campos = [
+    { k: 'dangerous_attacks', n: '🔴 Ataques Perigosos', ref: 40 },
+    { k: 'attacks', n: '⚔️ Ataques', ref: 80 },
+    { k: 'shots', n: '🎯 Chutes Total', ref: 14 },
+    { k: 'outsidebox', n: '💥 Chutes Fora Área', ref: 6 },
+    { k: 'insidebox', n: '📦 Chutes Dentro Área', ref: 8 },
+    { k: 'blocked', n: '🛡️ Bloqueados', ref: 4 },
+    { k: 'total_crosses', n: '⚔️ Cruzamentos', ref: 15 },
+    { k: 'accurate_crosses', n: '✅ Cruzamentos Certos', ref: 5 },
+    { k: 'key_passes', n: '🔑 Passes Decisivos', ref: 10 },
+    { k: 'possessiontime', n: '⚽ Posse (%)', ref: 50 },
+    { k: 'tackles', n: '💪 Tackles', ref: 12 },
+    { k: 'fouls', n: '⚠️ Faltas', ref: 12 },
+    { k: 'corners', n: '🚩 Cantos (stats)', ref: 5 },
+    { k: 'saves', n: '🧤 Defesas', ref: 4 },
+    { k: 'yellowcards', n: '🟨 Amarelos', ref: 3 }
+  ];
+
+  for (let c of campos) {
+    let m = medias.medias[c.k];
+    if (!m) continue;
+    let cls1 = m.time >= c.ref ? 'val-alto' : 'val-neutro';
+    let cls2 = m.adversario >= c.ref ? 'val-alto' : 'val-neutro';
+    let pct = Math.min(100, Math.round((m.time / (c.ref * 1.5)) * 100));
+    let cor = pct >= 70 ? '#00B37E' : pct >= 40 ? '#FBA94C' : '#f75a68';
+    h += `<tr><td>${c.n}</td><td class="${cls1}">${m.time}</td><td class="${cls2}">${m.adversario}</td>`;
+    h += `<td><div class="bar-container"><div class="bar-fill" style="width:${pct}%;background:${cor}"></div></div></td></tr>`;
+  }
+  h += '</table>';
+
+  // Tabela de jogos detalhados
+  h += '<h3>📋 Jogos Detalhados</h3>';
+  h += '<table><tr><th>Jogo</th><th>Data</th><th>Cantos Favor</th><th>Cantos Contra</th><th>Total</th></tr>';
+  medias.jogos.sort((a, b) => b.cantosTotal - a.cantosTotal);
+  for (let j of medias.jogos) {
+    let cls = j.cantosTotal >= 10 ? 'val-alto' : j.cantosTotal >= 7 ? 'val-medio' : 'val-baixo';
+    h += `<tr><td>${j.jogo}</td><td style="color:#7c7c8a">${j.date}</td>`;
+    h += `<td class="val-alto">${j.cantosAFavor}</td><td class="val-baixo">${j.cantosContra}</td>`;
+    h += `<td class="${cls}">${j.cantosTotal}</td></tr>`;
+  }
+  h += '</table></div>';
+
+  document.getElementById(containerId).innerHTML = h;
+}
+
+function renderResumoItem(label, valor, sub, cor) {
+  cor = cor || '#e1e1e6';
+  return `<div class="resumo-item"><div class="resumo-label">${label}</div><div class="resumo-valor" style="color:${cor}">${valor}</div>${sub ? `<div class="resumo-sub">${sub}</div>` : ''}</div>`;
+}
+
+// ===== RENDER CRUZAMENTO =====
+function renderCruzamento(mediaCasa, mediaFora, containerId) {
+  if (!mediaCasa || !mediaFora) {
+    document.getElementById(containerId).innerHTML = '<div class="card"><h2>🔥 Cruzamento</h2><p style="color:#7c7c8a">Dados insuficientes</p></div>';
+    return;
+  }
+
+  let h = '<div class="card"><h2>🔥 Cruzamento Casa vs Fora</h2>';
+
+  // Projeção de cantos
+  let projecaoTotal = parseFloat(((mediaCasa.cantos.aFavor.media + mediaFora.cantos.contra.media) / 2 + (mediaFora.cantos.aFavor.media + mediaCasa.cantos.contra.media) / 2).toFixed(1));
+  let projecaoCasa = parseFloat(((mediaCasa.cantos.aFavor.media + mediaFora.cantos.contra.media) / 2).toFixed(1));
+  let projecaoFora = parseFloat(((mediaFora.cantos.aFavor.media + mediaCasa.cantos.contra.media) / 2).toFixed(1));
+
+  h += '<div class="resumo-grid">';
+  h += renderResumoItem('📊 Projeção Total', projecaoTotal, `Casa: ${projecaoCasa} + Fora: ${projecaoFora}`, projecaoTotal >= 9 ? '#00B37E' : projecaoTotal >= 7 ? '#FBA94C' : '#f75a68');
+  h += renderResumoItem('🏠 Casa Produz', mediaCasa.cantos.aFavor.media, `Fora Cede: ${mediaFora.cantos.contra.media}`);
+  h += renderResumoItem('✈️ Fora Produz', mediaFora.cantos.aFavor.media, `Casa Cede: ${mediaCasa.cantos.contra.media}`);
+  h += '</div>';
+
+  // Correlações — O QUE FAZ A CASA GERAR CANTOS?
+  h += '<div class="correlacao-box"><div class="correlacao-titulo">🏭 Fábrica de Cantos da Casa — O que gera cantos?</div>';
+  let camposCorr = [
+    { k: 'total_crosses', n: '⚔️ Cruzamentos' },
+    { k: 'outsidebox', n: '💥 Chutes Fora Área' },
+    { k: 'blocked', n: '🛡️ Bloqueados (adversário)' },
+    { k: 'dangerous_attacks', n: '🔴 Ataques Perigosos' },
+    { k: 'key_passes', n: '🔑 Passes Decisivos' },
+    { k: 'possessiontime', n: '⚽ Posse' }
+  ];
+
+  // Para cada jogo da casa, calcular correlação com cantos
+  let jogosC = mediaCasa.jogos;
+  for (let campo of camposCorr) {
+    let altos = jogosC.filter(j => {
+      let v = j.stats[campo.k];
+      let val = v ? (v[j.tipo === 'home' ? 0 : 1] || v.home || 0) : 0;
+      let media = mediaCasa.medias[campo.k] ? mediaCasa.medias[campo.k].time : 0;
+      return val >= media;
+    });
+    let altosCantos = altos.length > 0 ? parseFloat((altos.reduce((s, j) => s + j.cantosTotal, 0) / altos.length).toFixed(1)) : 0;
+
+    let baixos = jogosC.filter(j => {
+      let v = j.stats[campo.k];
+      let val = v ? (v[j.tipo === 'home' ? 0 : 1] || v.home || 0) : 0;
+      let media = mediaCasa.medias[campo.k] ? mediaCasa.medias[campo.k].time : 0;
+      return val < media;
+    });
+    let baixosCantos = baixos.length > 0 ? parseFloat((baixos.reduce((s, j) => s + j.cantosTotal, 0) / baixos.length).toFixed(1)) : 0;
+
+    let diff = altosCantos - baixosCantos;
+    let cor = diff >= 2 ? '#00B37E' : diff >= 0.5 ? '#FBA94C' : '#f75a68';
+    let impacto = diff >= 2 ? '🔥 ALTO' : diff >= 0.5 ? '⚠️ Médio' : '❄️ Baixo';
+
+    h += `<div class="correlacao-row">
+      <span>${campo.n}</span>
+      <span>Acima: <b style="color:#00B37E">${altosCantos}</b> cantos (${altos.length}j) | Abaixo: <b style="color:#f75a68">${baixosCantos}</b> (${baixos.length}j)</span>
+      <span style="color:${cor};font-weight:700">${impacto} (+${diff.toFixed(1)})</span>
+    </div>`;
+  }
+  h += '</div>';
+
+  // O adversário de hoje — como se compara?
+  h += '<div class="correlacao-box"><div class="correlacao-titulo">📊 Perfil do Visitante — Favorece cantos?</div>';
+  let perfilFora = classificarPerfil(mediaFora);
+  if (perfilFora.tags.length) {
+    h += '<div style="margin:8px 0">';
+    perfilFora.tags.forEach(t => h += `<span class="tag ${t.cor}">${t.nome}</span> `);
+    h += '</div>';
+  }
+
+  let comparacoes = [
+    { k: 'blocked', n: 'Bloqueios', desc: 'Mais bloqueios = mais cantos para a casa' },
+    { k: 'tackles', n: 'Tackles', desc: 'Mais tackles = jogo truncado' },
+    { k: 'possessiontime', n: 'Posse', desc: 'Menos posse do fora = casa ataca mais' }
+  ];
+
+  for (let c of comparacoes) {
+    let valFora = mediaFora.medias[c.k] ? mediaFora.medias[c.k].time : 0;
+    let mediaCasaAdv = mediaCasa.medias[c.k] ? mediaCasa.medias[c.k].adversario : 0;
+    let diff = valFora - mediaCasaAdv;
+    let seta = diff > 0 ? '📈' : diff < 0 ? '📉' : '➡️';
+    h += `<div class="correlacao-row">
+      <span>${c.n}: <b>${valFora}</b> (fora) vs <b>${mediaCasaAdv}</b> (média adversários casa)</span>
+      <span style="color:#a8a8b3;font-size:11px">${seta} ${diff > 0 ? '+' : ''}${diff.toFixed(1)} | ${c.desc}</span>
+    </div>`;
+  }
+  h += '</div></div>';
+
+  document.getElementById(containerId).innerHTML = h;
+}
+
+// ===== RENDER JSON =====
+function renderJson(dataBase, dadosCasa, dadosFora, containerId) {
+  let h = '<div class="card"><h2>📦 JSON Raw</h2>';
+
+  h += '<h3>Jogo Base</h3>';
+  h += `<button class="json-toggle" onclick="toggleJson('jsonBase')">Mostrar/Esconder</button>`;
+  h += `<div class="json-box" id="jsonBase">${JSON.stringify(dataBase, null, 2)}</div>`;
+
+  h += '<h3>Primeiro Jogo Casa (amostra)</h3>';
+  let amostraCasa = dadosCasa.find(d => d);
+  h += `<button class="json-toggle" onclick="toggleJson('jsonCasa')">Mostrar/Esconder</button>`;
+  h += `<div class="json-box" id="jsonCasa">${amostraCasa ? JSON.stringify(amostraCasa, null, 2) : 'N/A'}</div>`;
+
+  h += '<h3>Primeiro Jogo Fora (amostra)</h3>';
+  let amostraFora = dadosFora.find(d => d);
+  h += `<button class="json-toggle" onclick="toggleJson('jsonFora')">Mostrar/Esconder</button>`;
+  h += `<div class="json-box" id="jsonFora">${amostraFora ? JSON.stringify(amostraFora, null, 2) : 'N/A'}</div>`;
+
+  h += '<h3>Stats disponíveis (campos)</h3>';
+  if (amostraCasa && amostraCasa.game) {
+    let g = amostraCasa.game;
+    let disponivel = {
+      stats: g.stats ? Object.keys(g.stats) : [],
+      totalCorner: g.totalCorner ? Object.keys(g.totalCorner) : [],
+      totalShots: g.totalShots ? Object.keys(g.totalShots) : [],
+      cornerIntervals: g.cornerIntervals ? Object.keys(g.cornerIntervals) : [],
+      shotIntervals: g.shotIntervals ? Object.keys(g.shotIntervals) : [],
+      otherLiveStats: g.otherLiveStats ? Object.keys(g.otherLiveStats) : [],
+      'otherLiveStats.halfs': g.otherLiveStats && g.otherLiveStats.halfs ? Object.keys(g.otherLiveStats.halfs) : [],
+      pressureIndex: g.pressureIndex ? 'array[' + g.pressureIndex.length + ']' : 'N/A',
+      avgPressureIndex: g.avgPressureIndex ? 'array[' + g.avgPressureIndex.length + ']' : 'N/A'
+    };
+    h += `<button class="json-toggle" onclick="toggleJson('jsonCampos')">Mostrar/Esconder</button>`;
+    h += `<div class="json-box" id="jsonCampos">${JSON.stringify(disponivel, null, 2)}</div>`;
+  }
+
+  h += '</div>';
+  document.getElementById(containerId).innerHTML = h;
+}
+
+function toggleJson(id) {
+  let el = document.getElementById(id);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+// ===== TABS =====
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('sec' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('active');
+}
+
+// ===== EXECUTAR =====
+async function executarDebug() {
+  let gid = document.getElementById('gameId').value.trim();
+  if (!gid) { alert('Cole o ID!'); return; }
+
+  document.getElementById('btnAnalise').disabled = true;
+  document.getElementById('prog').style.display = 'block';
+  document.getElementById('progBar').style.width = '10%';
+  document.getElementById('status').innerText = '🔍 Buscando jogo base...';
+  document.getElementById('resultado').style.display = 'none';
+
+  try {
+    // 1. Buscar jogo base
+    let dataBase = await fetchAPI(gid, 'games=20');
+    let game = dataBase.game;
+    document.getElementById('progBar').style.width = '20%';
+    document.getElementById('status').innerText = `✅ ${game.homeName} vs ${game.awayName} — Buscando histórico...`;
+
+    // 2. IDs do histórico
+    let idsCasa = (dataBase.lastGames.home.asHome || []).map(g => g.id).filter(x => x);
+    let idsFora = (dataBase.lastGames.away.asAway || []).map(g => g.id).filter(x => x);
+
+    document.getElementById('status').innerText = `📊 Casa: ${idsCasa.length} jogos | Fora: ${idsFora.length} jogos — Carregando detalhes...`;
+    document.getElementById('progBar').style.width = '30%';
+
+    // 3. Buscar detalhes em paralelo
+    let totalReqs = idsCasa.length + idsFora.length;
+    let done = 0;
+
+    let dadosCasa = await lotes(idsCasa, async (id) => {
+      let d = await fetchAPI(id, '');
+      done++;
+      document.getElementById('progBar').style.width = (30 + (done / totalReqs) * 50) + '%';
+      return d;
+    });
+
+    let dadosFora = await lotes(idsFora, async (id) => {
+      let d = await fetchAPI(id, '');
+      done++;
+      document.getElementById('progBar').style.width = (30 + (done / totalReqs) * 50) + '%';
+      return d;
+    });
+
+    document.getElementById('progBar').style.width = '85%';
+    document.getElementById('status').innerText = '📊 Calculando médias...';
+
+    // 4. Calcular médias
+    let mediaCasa = calcularMedias(dadosCasa, 'home');
+    let mediaFora = calcularMedias(dadosFora, 'away');
+
+    // 5. Resumo do jogo
+    let st = game.standings || {};
+    document.getElementById('cardResumo').innerHTML = `
+      <h2>⚽ ${game.homeName} vs ${game.awayName}</h2>
+      <div class="resumo-grid">
+        ${renderResumoItem('🏠 Casa', game.homeName, `${st.localteam_position || '?'}º lugar`)}
+        ${renderResumoItem('✈️ Fora', game.awayName, `${st.visitorteam_position || '?'}º lugar`)}
+        ${renderResumoItem('📊 Jogos Casa', `${idsCasa.length}`, 'como mandante')}
+        ${renderResumoItem('📊 Jogos Fora', `${idsFora.length}`, 'como visitante')}
+      </div>`;
+
+    // 6. Render tabs
+    renderMedias(mediaCasa, `🏠 ${game.homeName} — Jogando em CASA (${mediaCasa ? mediaCasa.count : 0} jogos)`, 'secCasa');
+    renderMedias(mediaFora, `✈️ ${game.awayName} — Jogando FORA (${mediaFora ? mediaFora.count : 0} jogos)`, 'secFora');
+    renderCruzamento(mediaCasa, mediaFora, 'secCruzamento');
+    renderJson(dataBase, dadosCasa, dadosFora, 'secJson');
+
+    document.getElementById('progBar').style.width = '100%';
+    document.getElementById('status').innerText = `✅ Concluído! Casa: ${mediaCasa ? mediaCasa.count : 0} jogos | Fora: ${mediaFora ? mediaFora.count : 0} jogos`;
+    document.getElementById('resultado').style.display = 'block';
+
+  } catch (e) {
+    document.getElementById('status').innerText = `❌ Erro: ${e.message}`;
+    document.getElementById('progBar').style.background = '#f75a68';
+  }
+
+  document.getElementById('btnAnalise').disabled = false;
+}
+</script>
+</body>
+</html>
