@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧬 DNA Termômetro - 3 Camadas</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#121214;color:#fff;padding:20px;margin:0}
+.container{max-width:1100px;margin:0 auto}
+.card{background:#202024;padding:20px;border-radius:12px;border:1px solid #323238;margin-bottom:20px}
+h1{font-size:1.4rem;color:#00875f;margin-top:0;display:flex;align-items:center;gap:10px}
+h2{font-size:1.1rem;margin:0 0 10px}
+h3{font-size:1rem;margin:0 0 8px;color:#a78bfa}
+.row-flex{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.input-small{background:#121214;color:#fff;border:1px solid #323238;padding:10px 12px;border-radius:8px;font-size:14px;outline:none;min-width:220px}
+.input-small:focus{border-color:#00875f}
+button{background:#00875f;color:#fff;border:none;padding:12px 22px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;transition:background .2s}
+button:hover{background:#015f43}
+button:disabled{background:#323238;color:#7c7c8a;cursor:not-allowed}
+.progress{width:100%;height:8px;background:#323238;border-radius:4px;margin-top:12px;overflow:hidden;display:none}
+.progress-bar{height:100%;background:#38bdf8;width:0%;transition:width .3s}
+.status{font-size:13px;color:#a8a8b3;margin-top:10px;text-align:center}
+.section-title{margin-top:24px;padding:10px 14px;background:#0f172a;border:1px solid #334155;border-radius:10px;color:#93c5fd;font-size:18px;font-weight:bold}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr}}
+.box{background:#1c1c1f;border:1px solid #323238;border-radius:10px;padding:14px}
+.small{font-size:12px;color:#a8a8b3}
+.stat{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #29292e;font-size:13px}
+.stat:last-child{border-bottom:none}
+.label{color:#a8a8b3}
+.value{font-weight:700}
+.tag{padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600;display:inline-block;margin:2px}
+.tag-green{background:#00875f22;color:#00B37E;border:1px solid #00875f55}
+.tag-yellow{background:#c4760022;color:#FBA94C;border:1px solid #c4760055}
+.tag-red{background:#f7345822;color:#f75a68;border:1px solid #f7345855}
+.tag-blue{background:#38bdf822;color:#38bdf8;border:1px solid #38bdf855}
+.tag-purple{background:#7c3aed22;color:#a78bfa;border:1px solid #7c3aed55}
+.score-card{background:#1c1c1f;border:2px solid #7c3aed;border-radius:12px;padding:18px;text-align:center;margin-bottom:16px}
+.score-number{font-size:2.4rem;font-weight:700}
+.score-bar{width:100%;max-width:420px;height:12px;background:#323238;border-radius:999px;overflow:hidden;margin:10px auto}
+.score-fill{height:100%;border-radius:999px}
+.score-label{font-size:14px;font-weight:700}
+.score-sub{font-size:12px;color:#a8a8b3;margin-top:4px}
+.blocos{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:14px}
+.bloco{background:#121214;border:1px solid #29292e;border-radius:8px;padding:10px;text-align:center}
+.bloco-ttl{font-size:10px;color:#7c7c8a;text-transform:uppercase;letter-spacing:.5px}
+.bloco-val{font-size:1.3rem;font-weight:700;margin-top:4px}
+.bloco-sub{font-size:10px;color:#a8a8b3;margin-top:2px}
+.tabs{display:flex;gap:0;margin-bottom:16px}
+.tab{flex:1;padding:10px;text-align:center;background:#1c1c1f;border:1px solid #323238;color:#a8a8b3;font-weight:600;font-size:12px;cursor:pointer;transition:all .2s}
+.tab:first-child{border-radius:8px 0 0 8px}
+.tab:last-child{border-radius:0 8px 8px 0}
+.tab.active{background:#7c3aed;color:#fff;border-color:#7c3aed}
+.tab-content{display:none}
+.tab-content.active{display:block}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>🧬 DNA Termômetro — 3 Camadas</h1>
+    <p class="small">
+      DNA separado dos cenários.<br>
+      <b>Stats confiáveis:</b> cantos, ataques perigosos e posse.<br>
+      <b>Camadas:</b> 20 casa/fora · 10 mistos · 6 casa/fora.
+    </p>
+    <div class="row-flex">
+      <input id="gameId" class="input-small" placeholder="ID do Jogo">
+      <button id="btnAnalise" onclick="executar()">🧬 Rodar DNA</button>
+    </div>
+    <div class="progress" id="prog"><div class="progress-bar" id="progBar"></div></div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div id="resultado" style="display:none"></div>
+</div>
+
+<script>
+const TOKEN='45003_ec8357116e';
+
+async function fetchAPI(id, extra=''){
+  let u = `https://cornerprobet.com/api/v3/getAnalysis.php?gameId=${id}&token=${TOKEN}`;
+  if (extra) u += `&${extra}`;
+  const r = await fetch(u);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return await r.json();
+}
+
+function avg(arr){ return arr.length ? parseFloat((arr.reduce((s,v)=>s+v,0)/arr.length).toFixed(1)) : 0; }
+function sortByDateDesc(arr){ return [...arr].sort((a,b)=>(b.date || '').localeCompare(a.date || '')); }
+
+function extrairDNAJogo(jogo, teamId){
+  if (!jogo || !jogo.stats) return null;
+
+  const isHome = String(jogo.homeId) === String(teamId);
+  const idx = isHome ? 0 : 1;
+  const idxAdv = isHome ? 1 : 0;
+
+  const stats = {};
+  const campos = ['dangerous_attacks','possessiontime'];
+
+  for (const c of campos){
+    if (jogo.stats[c]){
+      stats[c] = {
+        time: parseFloat(jogo.stats[c][idx]) || 0,
+        adv: parseFloat(jogo.stats[c][idxAdv]) || 0
+      };
+    }
+  }
+
+  const tc = jogo.totalCorner || {};
+  const cantos1T = { favor: 0, contra: 0 }, cantos2T = { favor: 0, contra: 0 }, cantosTotal = { favor: 0, contra: 0 };
+
+  if (tc.first){
+    cantos1T.favor = isHome ? (tc.first.h||0) : (tc.first.a||0);
+    cantos1T.contra = isHome ? (tc.first.a||0) : (tc.first.h||0);
+  }
+  if (tc.second){
+    cantos2T.favor = isHome ? (tc.second.h||0) : (tc.second.a||0);
+    cantos2T.contra = isHome ? (tc.second.a||0) : (tc.second.h||0);
+  }
+  if (tc.total){
+    cantosTotal.favor = isHome ? (tc.total.h||0) : (tc.total.a||0);
+    cantosTotal.contra = isHome ? (tc.total.a||0) : (tc.total.h||0);
+  }
+
+  const cantosJogoTotal = (tc.total ? tc.total.t : 0) || (cantosTotal.favor + cantosTotal.contra);
+  const cantos1Ttotal = (tc.first ? tc.first.t : 0) || (cantos1T.favor + cantos1T.contra);
+  const cantos2Ttotal = (tc.second ? tc.second.t : 0) || (cantos2T.favor + cantos2T.contra);
+
+  return {
+    date: jogo.date || '',
+    homeName: jogo.homeName || '',
+    awayName: jogo.awayName || '',
+    score: jogo.score || '',
+    isHome,
+    mando: isHome ? 'casa' : 'fora',
+    stats,
+    cantos1T,
+    cantos2T,
+    cantosTotal,
+    cantosJogoTotal,
+    cantos1Ttotal,
+    cantos2Ttotal
+  };
+}
+
+function calcMedias(jogos){
+  if (!jogos.length) return null;
+
+  return {
+    count: jogos.length,
+    cantosTotal: avg(jogos.map(j=>j.cantosJogoTotal)),
+    cantosAFavor: avg(jogos.map(j=>j.cantosTotal.favor)),
+    cantosContra: avg(jogos.map(j=>j.cantosTotal.contra)),
+    cantos1T: avg(jogos.map(j=>j.cantos1Ttotal)),
+    cantos2T: avg(jogos.map(j=>j.cantos2Ttotal)),
+    dangerous_for: avg(jogos.map(j=>j.stats.dangerous_attacks?.time || 0)),
+    dangerous_against: avg(jogos.map(j=>j.stats.dangerous_attacks?.adv || 0)),
+    posse_for: avg(jogos.map(j=>j.stats.possessiontime?.time || 0)),
+    posse_against: avg(jogos.map(j=>j.stats.possessiontime?.adv || 0))
+  };
+}
+
+function classificarPerfil(m){
+  if (!m) return [];
+  const tags = [];
+
+  if (m.posse_for >= 55) tags.push({n:'🎯 Dominante',c:'tag-blue'});
+  if (m.posse_for <= 42) tags.push({n:'🧱 Retrancado',c:'tag-red'});
+  if (m.dangerous_for >= 40) tags.push({n:'💥 Ofensivo',c:'tag-green'});
+  if (m.dangerous_for <= 25) tags.push({n:'😴 Passivo',c:'tag-red'});
+  if (m.cantosAFavor >= 5.5) tags.push({n:'🔥 Produtor Cantos',c:'tag-green'});
+  if (m.cantosContra >= 5.5) tags.push({n:'🥅 Cede Cantos',c:'tag-red'});
+  if (m.cantosTotal >= 9.5) tags.push({n:'📈 Jogo quente',c:'tag-purple'});
+  if (m.cantos1T >= 4.5) tags.push({n:'⏱️ 1T forte',c:'tag-blue'});
+  if (m.cantos2T >= 4.5) tags.push({n:'⌛ 2T forte',c:'tag-purple'});
+
+  return tags;
+}
+
+function calcBlocoCantos(mH,mA){
+  let score = 0;
+
+  if (mH.cantosAFavor >= 6) score += 18;
+  else if (mH.cantosAFavor >= 5) score += 14;
+  else if (mH.cantosAFavor >= 4) score += 10;
+  else score += 5;
+
+  if (mA.cantosContra >= 6) score += 12;
+  else if (mA.cantosContra >= 5) score += 9;
+  else if (mA.cantosContra >= 4) score += 6;
+  else score += 3;
+
+  if (mA.cantosTotal >= 10) score += 10;
+  else if (mA.cantosTotal >= 8) score += 7;
+  else if (mA.cantosTotal >= 6) score += 5;
+  else score += 2;
+
+  if (mH.cantos1T >= 4.5) score += 5;
+  else if (mH.cantos1T >= 4) score += 3;
+  else score += 1;
+
+  if (mH.cantos2T >= 4.5) score += 5;
+  else if (mH.cantos2T >= 4) score += 3;
+  else score += 1;
+
+  return Math.min(score, 50);
+}
+
+function calcBlocoAtaques(mH,mA){
+  let score = 0;
+
+  if (mH.dangerous_for >= 80) score += 16;
+  else if (mH.dangerous_for >= 65) score += 12;
+  else if (mH.dangerous_for >= 50) score += 8;
+  else score += 4;
+
+  if (mA.dangerous_against >= 70) score += 14;
+  else if (mA.dangerous_against >= 60) score += 10;
+  else if (mA.dangerous_against >= 50) score += 6;
+  else score += 3;
+
+  return Math.min(score, 30);
+}
+
+function calcBlocoPosse(mH,mA){
+  let score = 0;
+
+  if (mH.posse_for >= 58) score += 10;
+  else if (mH.posse_for >= 54) score += 7;
+  else if (mH.posse_for >= 50) score += 5;
+  else score += 2;
+
+  if (mA.posse_against >= 54) score += 10;
+  else if (mA.posse_against >= 50) score += 7;
+  else if (mA.posse_against >= 46) score += 5;
+  else score += 2;
+
+  return Math.min(score, 20);
+}
+
+function calcTermometro(mH,mA){
+  if (!mH || !mA) {
+    return {
+      score: 0,
+      detalhe: { cantos:0, ataques:0, posse:0 }
+    };
+  }
+
+  const blocoCantos = calcBlocoCantos(mH,mA);
+  const blocoAtaques = calcBlocoAtaques(mH,mA);
+  const blocoPosse = calcBlocoPosse(mH,mA);
+
+  const pontos = blocoCantos + blocoAtaques + blocoPosse;
+  const score = parseFloat(((pontos / 100) * 10).toFixed(1));
+
+  return {
+    score,
+    detalhe:{
+      cantos: blocoCantos,
+      ataques: blocoAtaques,
+      posse: blocoPosse
+    }
+  };
+}
+
+function renderTags(tags){
+  return tags.map(t=>`<span class="tag ${t.c}">${t.n}</span>`).join('');
+}
+
+function renderPerfilResumo(titulo, medias, tags){
+  if (!medias) return `<div class="box"><h3>${titulo}</h3><div class="small">Sem dados</div></div>`;
+
+  return `
+    <div class="box">
+      <h3>${titulo}</h3>
+      <div class="stat"><span class="label">Jogos</span><span class="value">${medias.count}</span></div>
+      <div class="stat"><span class="label">Cantos total</span><span class="value">${medias.cantosTotal}</span></div>
+      <div class="stat"><span class="label">Cantos a favor</span><span class="value">${medias.cantosAFavor}</span></div>
+      <div class="stat"><span class="label">Cantos cedidos</span><span class="value">${medias.cantosContra}</span></div>
+      <div class="stat"><span class="label">Cantos 1T</span><span class="value">${medias.cantos1T}</span></div>
+      <div class="stat"><span class="label">Cantos 2T</span><span class="value">${medias.cantos2T}</span></div>
+      <div class="stat"><span class="label">Ataques perigosos</span><span class="value">${medias.dangerous_for}</span></div>
+      <div class="stat"><span class="label">Ataques perigosos cedidos</span><span class="value">${medias.dangerous_against}</span></div>
+      <div class="stat"><span class="label">Posse</span><span class="value">${medias.posse_for}</span></div>
+      <div class="stat"><span class="label">Posse cedida</span><span class="value">${medias.posse_against}</span></div>
+      <div style="margin-top:10px">${renderTags(tags)}</div>
+    </div>
+  `;
+}
+
+function renderScore(nome, termo){
+  const cor = termo.score >= 7 ? '#00B37E' : termo.score >= 5 ? '#FBA94C' : '#f75a68';
+  const label = termo.score >= 8 ? '🔥 Muito quente' : termo.score >= 6.5 ? '✅ Quente' : termo.score >= 5 ? '⚠️ Morno' : '❌ Frio';
+  const width = Math.round((termo.score/10)*100);
+
+  return `
+    <div class="score-card">
+      <div class="small" style="text-transform:uppercase;letter-spacing:1px">${nome}</div>
+      <div class="score-number" style="color:${cor}">${termo.score}/10</div>
+      <div class="score-bar"><div class="score-fill" style="width:${width}%;background:${cor}"></div></div>
+      <div class="score-label" style="color:${cor}">${label}</div>
+      <div class="score-sub">DNA separado dos cenários</div>
+
+      <div class="blocos">
+        <div class="bloco">
+          <div class="bloco-ttl">Cantos</div>
+          <div class="bloco-val">${termo.detalhe.cantos}</div>
+          <div class="bloco-sub">máx. 50</div>
+        </div>
+        <div class="bloco">
+          <div class="bloco-ttl">Ataques</div>
+          <div class="bloco-val">${termo.detalhe.ataques}</div>
+          <div class="bloco-sub">máx. 30</div>
+        </div>
+        <div class="bloco">
+          <div class="bloco-ttl">Posse</div>
+          <div class="bloco-val">${termo.detalhe.posse}</div>
+          <div class="bloco-sub">máx. 20</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function montarCamada(nome, jogosHome, jogosAway, homeName, awayName){
+  const mH = calcMedias(jogosHome);
+  const mA = calcMedias(jogosAway);
+  const tH = classificarPerfil(mH);
+  const tA = classificarPerfil(mA);
+  const termo = calcTermometro(mH,mA);
+
+  return `
+    ${renderScore(`Termômetro DNA — ${nome}`, termo)}
+    <div class="grid2">
+      ${renderPerfilResumo(homeName, mH, tH)}
+      ${renderPerfilResumo(awayName, mA, tA)}
+    </div>
+  `;
+}
+
+function switchTab(id, el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+async function executar(){
+  const gid = document.getElementById('gameId').value.trim();
+  if(!gid){ alert('Cole o ID!'); return; }
+
+  const btn = document.getElementById('btnAnalise');
+  const prog = document.getElementById('prog');
+  const progBar = document.getElementById('progBar');
+  const status = document.getElementById('status');
+  const resultado = document.getElementById('resultado');
+
+  btn.disabled = true;
+  prog.style.display = 'block';
+  progBar.style.width = '10%';
+  status.innerText = '🔍 Buscando jogo...';
+  resultado.style.display = 'none';
+  resultado.innerHTML = '';
+
+  try{
+    const data = await fetchAPI(gid,'games=20');
+    const game = data.game;
+    const homeId = game.homeId;
+    const awayId = game.awayId;
+
+    progBar.style.width = '35%';
+    status.innerText = `⚽ ${game.homeName} vs ${game.awayName} — montando DNA...`;
+
+    const hH = sortByDateDesc(data.lastGames.home?.asHome || []);
+    const hA = sortByDateDesc(data.lastGames.home?.asAway || []);
+    const aH = sortByDateDesc(data.lastGames.away?.asHome || []);
+    const aA = sortByDateDesc(data.lastGames.away?.asAway || []);
+
+    const home20 = hH.slice(0,20).map(j=>extrairDNAJogo(j, homeId)).filter(Boolean);
+    const away20 = aA.slice(0,20).map(j=>extrairDNAJogo(j, awayId)).filter(Boolean);
+
+    const home10 = sortByDateDesc([...hH, ...hA]).slice(0,10).map(j=>extrairDNAJogo(j, homeId)).filter(Boolean);
+    const away10 = sortByDateDesc([...aH, ...aA]).slice(0,10).map(j=>extrairDNAJogo(j, awayId)).filter(Boolean);
+
+    const home6 = hH.slice(0,6).map(j=>extrairDNAJogo(j, homeId)).filter(Boolean);
+    const away6 = aA.slice(0,6).map(j=>extrairDNAJogo(j, awayId)).filter(Boolean);
+
+    progBar.style.width = '80%';
+
+    let html = '';
+    html += `
+      <div class="card">
+        <h2>🧬 DNA Termômetro do confronto</h2>
+        <div><b>${game.homeName} x ${game.awayName}</b></div>
+        <div class="small" style="margin-top:6px">
+          DNA separado dos cenários, usando apenas stats confiáveis.
+        </div>
+      </div>
+    `;
+
+    html += `
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('tab20', this)">📋 Completo (20 casa/fora)</div>
+        <div class="tab" onclick="switchTab('tab10', this)">🔄 Geral (10 mistos)</div>
+        <div class="tab" onclick="switchTab('tab6', this)">⏱️ Recente (6 casa/fora)</div>
+      </div>
+
+      <div id="tab20" class="tab-content active">
+        ${montarCamada('20 jogos no mesmo mando', home20, away20, game.homeName, game.awayName)}
+      </div>
+
+      <div id="tab10" class="tab-content">
+        ${montarCamada('10 jogos mistos', home10, away10, game.homeName, game.awayName)}
+      </div>
+
+      <div id="tab6" class="tab-content">
+        ${montarCamada('6 jogos no mesmo mando', home6, away6, game.homeName, game.awayName)}
+      </div>
+    `;
+
+    resultado.innerHTML = html;
+    resultado.style.display = 'block';
+
+    progBar.style.width = '100%';
+    status.innerText = '✅ DNA termômetro carregado.';
+  }catch(e){
+    console.error(e);
+    status.innerText = '❌ Erro: ' + e.message;
+  }
+
+  btn.disabled = false;
+}
+</script>
+</body>
+</html>
