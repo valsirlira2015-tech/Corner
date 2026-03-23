@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧬 DNA + Cenários Final em Guias (Lazy)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#121214;color:#fff;padding:20px;margin:0}
+.container{max-width:1200px;margin:0 auto}
+.card{background:#202024;padding:20px;border-radius:12px;border:1px solid #323238;margin-bottom:20px}
+h1{font-size:1.4rem;color:#00875f;margin-top:0;display:flex;align-items:center;gap:10px}
+h2{font-size:1.1rem;margin:0 0 10px;color:#a78bfa}
+h3{font-size:1rem;margin:0 0 10px;color:#7dd3fc}
+.row-flex{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.input-small{background:#121214;color:#fff;border:1px solid #323238;padding:10px 12px;border-radius:8px;font-size:14px;outline:none;min-width:220px}
+.input-small:focus{border-color:#00875f}
+button{background:#00875f;color:#fff;border:none;padding:12px 22px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;transition:background .2s}
+button:hover{background:#015f43}
+button:disabled{background:#323238;color:#7c7c8a;cursor:not-allowed}
+.progress{width:100%;height:8px;background:#323238;border-radius:4px;margin-top:12px;overflow:hidden;display:none}
+.progress-bar{height:100%;background:#38bdf8;width:0%;transition:width .25s}
+.status{font-size:13px;color:#a8a8b3;margin-top:10px;text-align:center}
+.small{font-size:12px;color:#a8a8b3}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr}}
+.box{background:#1c1c1f;border:1px solid #323238;border-radius:10px;padding:14px}
+.stat{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #29292e;font-size:13px}
+.stat:last-child{border-bottom:none}
+.label{color:#a8a8b3}
+.value{font-weight:700}
+.tag{padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600;display:inline-block;margin:2px}
+.tag-green{background:#00875f22;color:#00B37E;border:1px solid #00875f55}
+.tag-red{background:#f7345822;color:#f75a68;border:1px solid #f7345855}
+.tag-blue{background:#38bdf822;color:#38bdf8;border:1px solid #38bdf855}
+.tag-purple{background:#7c3aed22;color:#a78bfa;border:1px solid #7c3aed55}
+.score-card{background:#1c1c1f;border:2px solid #7c3aed;border-radius:12px;padding:18px;text-align:center;margin-bottom:16px}
+.score-number{font-size:2.4rem;font-weight:700}
+.score-bar{width:100%;max-width:420px;height:12px;background:#323238;border-radius:999px;overflow:hidden;margin:10px auto}
+.score-fill{height:100%;border-radius:999px}
+.score-label{font-size:14px;font-weight:700}
+.score-sub{font-size:12px;color:#a8a8b3;margin-top:4px}
+.blocos{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:14px}
+.bloco{background:#121214;border:1px solid #29292e;border-radius:8px;padding:10px;text-align:center}
+.bloco-ttl{font-size:10px;color:#7c7c8a;text-transform:uppercase;letter-spacing:.5px}
+.bloco-val{font-size:1.3rem;font-weight:700;margin-top:4px}
+.bloco-sub{font-size:10px;color:#a8a8b3;margin-top:2px}
+.cenario-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;border-bottom:1px solid #29292e}
+.cenario-row:last-child{border-bottom:none}
+.cenario-left{flex:1}
+.cenario-name{font-size:13px;font-weight:700;color:#e1e1e6}
+.cenario-desc{font-size:11px;color:#7c7c8a;margin-top:2px}
+.cenario-right{text-align:right;min-width:140px}
+.cenario-pct{font-size:1.1rem;font-weight:700}
+.cenario-frac{font-size:11px;color:#a8a8b3}
+.section-title{margin-top:24px;padding:10px 14px;background:#0f172a;border:1px solid #334155;border-radius:10px;color:#93c5fd;font-size:18px;font-weight:bold}
+.final-box{background:#1c1c1f;border:1px solid #7c3aed55;border-radius:10px;padding:16px}
+.final-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #29292e;font-size:13px}
+.final-row:last-child{border-bottom:none}
+.loading-box{background:#1c1c1f;border:1px dashed #475569;border-radius:10px;padding:18px;text-align:center;color:#cbd5e1}
+.tabs{display:flex;gap:0;margin-bottom:16px;flex-wrap:wrap}
+.tab{flex:1;padding:10px;text-align:center;background:#1c1c1f;border:1px solid #323238;color:#a8a8b3;font-weight:600;font-size:12px;cursor:pointer;transition:all .2s;min-width:180px}
+.tab:first-child{border-radius:8px 0 0 8px}
+.tab:last-child{border-radius:0 8px 8px 0}
+.tab.active{background:#7c3aed;color:#fff;border-color:#7c3aed}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.subtabs{display:flex;gap:0;margin-bottom:16px;flex-wrap:wrap}
+.subtab{flex:1;padding:9px;text-align:center;background:#121214;border:1px solid #323238;color:#a8a8b3;font-weight:600;font-size:12px;cursor:pointer;transition:all .2s;min-width:150px}
+.subtab:first-child{border-radius:8px 0 0 8px}
+.subtab:last-child{border-radius:0 8px 8px 0}
+.subtab.active{background:#38bdf8;color:#0b1120;border-color:#38bdf8}
+.subtab-content{display:none}
+.subtab-content.active{display:block}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>🧬 DNA + Cenários Final</h1>
+    <p class="small">
+      <b>DNA</b> separado dos cenários em 3 camadas.<br>
+      <b>Cenários</b> apenas em <b>20 jogos no mesmo mando</b> e carregados <b>somente ao abrir a guia</b>.
+    </p>
+    <div class="row-flex">
+      <input id="gameId" class="input-small" placeholder="ID do Jogo">
+      <button id="btnAnalise" onclick="executar()">⚽ Rodar análise final</button>
+    </div>
+    <div class="progress" id="prog"><div class="progress-bar" id="progBar"></div></div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div id="resultado" style="display:none"></div>
+</div>
+
+<script>
+const TOKEN='45003_ec8357116e';
+const singleCache = new Map();
+let appState = {
+  game: null,
+  homeId: null,
+  awayId: null,
+  home20base: [],
+  away20base: [],
+  layers: null,
+  cenariosLoaded: false,
+  cenariosLoading: false
+};
+
+async function fetchAPI(id, extra=''){
+  let u = `https://cornerprobet.com/api/v3/getAnalysis.php?gameId=${id}&token=${TOKEN}`;
+  if (extra) u += `&${extra}`;
+  const r = await fetch(u);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return await r.json();
+}
+
+async function fetchSingleCached(id){
+  if (singleCache.has(String(id))) return singleCache.get(String(id));
+  const data = await fetchAPI(id);
+  singleCache.set(String(id), data);
+  return data;
+}
+
+function avg(arr){ return arr.length ? parseFloat((arr.reduce((s,v)=>s+v,0)/arr.length).toFixed(1)) : 0; }
+function pct(g,a){ return a > 0 ? Math.round((g/a)*100) : 0; }
+function sortByDateDesc(arr){ return [...arr].sort((a,b)=>(b.date || '').localeCompare(a.date || '')); }
+function detectFixtureId(jogo){ return jogo.gameId || jogo.id || jogo.fixture_id || null; }
+function getEventsClean(source){ if (Array.isArray(source?.eventsClean)) return source.eventsClean; if (Array.isArray(source?.game?.eventsClean)) return source.game.eventsClean; return []; }
+
+function parseMinuteParts(tRaw){
+  const s = String(tRaw || '').trim();
+  if (!s) return { raw:s, base:0, extra:0, total:0 };
+  if (s.includes('+')) {
+    const [b,e] = s.split('+');
+    const base = parseInt(b,10) || 0;
+    const extra = parseInt(e,10) || 0;
+    return { raw:s, base, extra, total:base+extra };
+  }
+  const base = parseInt(s,10) || 0;
+  return { raw:s, base, extra:0, total:base };
+}
+
+function isGoal(ev){ return String(ev.tp || '').toLowerCase() === 'g'; }
+function isCorner(ev){ return String(ev.tp || '').toLowerCase() === 'c'; }
+
+function detectarLadoDoTimeNoJogo(game, teamId){
+  if (String(game.homeId) === String(teamId)) return 'h';
+  if (String(game.awayId) === String(teamId)) return 'a';
+  return null;
+}
+
+function scoreAtExactMinute(events, teamSide, exactMinute){
+  let time = 0, adv = 0;
+  for (const ev of events){
+    if (!isGoal(ev)) continue;
+    const mp = parseMinuteParts(ev.t);
+    if (mp.total > exactMinute) continue;
+    if (ev.h === teamSide) time++;
+    else adv++;
+  }
+  return { time, adv };
+}
+
+function countCorners37HT(events){
+  return events.filter(ev => {
+    if (!isCorner(ev)) return false;
+    const mp = parseMinuteParts(ev.t);
+    return mp.base >= 37 && mp.base <= 45;
+  }).length;
+}
+function countCorners70Plus(events){
+  return events.filter(ev => isCorner(ev) && parseMinuteParts(ev.t).total >= 70).length;
+}
+function countCorners80Plus(events){
+  return events.filter(ev => isCorner(ev) && parseMinuteParts(ev.t).total >= 80).length;
+}
+
+function extrairDNAJogo(jogo, teamId){
+  if (!jogo || !jogo.stats) return null;
+
+  const isHome = String(jogo.homeId) === String(teamId);
+  const idx = isHome ? 0 : 1;
+  const idxAdv = isHome ? 1 : 0;
+
+  const stats = {};
+  for (const c of ['dangerous_attacks','possessiontime']){
+    if (jogo.stats[c]){
+      stats[c] = {
+        time: parseFloat(jogo.stats[c][idx]) || 0,
+        adv: parseFloat(jogo.stats[c][idxAdv]) || 0
+      };
+    }
+  }
+
+  const tc = jogo.totalCorner || {};
+  const cantos1T = { favor:0, contra:0 }, cantos2T = { favor:0, contra:0 }, cantosTotal = { favor:0, contra:0 };
+
+  if (tc.first){
+    cantos1T.favor = isHome ? (tc.first.h||0) : (tc.first.a||0);
+    cantos1T.contra = isHome ? (tc.first.a||0) : (tc.first.h||0);
+  }
+  if (tc.second){
+    cantos2T.favor = isHome ? (tc.second.h||0) : (tc.second.a||0);
+    cantos2T.contra = isHome ? (tc.second.a||0) : (tc.second.h||0);
+  }
+  if (tc.total){
+    cantosTotal.favor = isHome ? (tc.total.h||0) : (tc.total.a||0);
+    cantosTotal.contra = isHome ? (tc.total.a||0) : (tc.total.h||0);
+  }
+
+  const cantosJogoTotal = (tc.total ? tc.total.t : 0) || (cantosTotal.favor + cantosTotal.contra);
+  const cantos1Ttotal = (tc.first ? tc.first.t : 0) || (cantos1T.favor + cantos1T.contra);
+  const cantos2Ttotal = (tc.second ? tc.second.t : 0) || (cantos2T.favor + cantos2T.contra);
+
+  return { stats, cantosTotal, cantosJogoTotal, cantos1Ttotal, cantos2Ttotal };
+}
+
+function calcMedias(jogos){
+  if (!jogos.length) return null;
+  return {
+    count: jogos.length,
+    cantosTotal: avg(jogos.map(j=>j.cantosJogoTotal)),
+    cantosAFavor: avg(jogos.map(j=>j.cantosTotal.favor)),
+    cantosContra: avg(jogos.map(j=>j.cantosTotal.contra)),
+    cantos1T: avg(jogos.map(j=>j.cantos1Ttotal)),
+    cantos2T: avg(jogos.map(j=>j.cantos2Ttotal)),
+    dangerous_for: avg(jogos.map(j=>j.stats.dangerous_attacks?.time || 0)),
+    dangerous_against: avg(jogos.map(j=>j.stats.dangerous_attacks?.adv || 0)),
+    posse_for: avg(jogos.map(j=>j.stats.possessiontime?.time || 0)),
+    posse_against: avg(jogos.map(j=>j.stats.possessiontime?.adv || 0))
+  };
+}
+
+function classificarPerfil(m){
+  if (!m) return [];
+  const tags = [];
+  if (m.posse_for >= 55) tags.push({n:'🎯 Dominante',c:'tag-blue'});
+  if (m.dangerous_for >= 40) tags.push({n:'💥 Ofensivo',c:'tag-green'});
+  if (m.cantosAFavor >= 5.5) tags.push({n:'🔥 Produtor Cantos',c:'tag-green'});
+  if (m.cantosContra >= 5.5) tags.push({n:'🥅 Cede Cantos',c:'tag-red'});
+  if (m.cantosTotal >= 9.5) tags.push({n:'📈 Jogo quente',c:'tag-purple'});
+  return tags;
+}
+
+function calcBlocoCantos(mH,mA){
+  let score = 0;
+  if (mH.cantosAFavor >= 6) score += 18; else if (mH.cantosAFavor >= 5) score += 14; else if (mH.cantosAFavor >= 4) score += 10; else score += 5;
+  if (mA.cantosContra >= 6) score += 12; else if (mA.cantosContra >= 5) score += 9; else if (mA.cantosContra >= 4) score += 6; else score += 3;
+  if (mA.cantosTotal >= 10) score += 10; else if (mA.cantosTotal >= 8) score += 7; else if (mA.cantosTotal >= 6) score += 5; else score += 2;
+  if (mH.cantos1T >= 4.5) score += 5; else if (mH.cantos1T >= 4) score += 3; else score += 1;
+  if (mH.cantos2T >= 4.5) score += 5; else if (mH.cantos2T >= 4) score += 3; else score += 1;
+  return Math.min(score, 50);
+}
+function calcBlocoAtaques(mH,mA){
+  let score = 0;
+  if (mH.dangerous_for >= 80) score += 16; else if (mH.dangerous_for >= 65) score += 12; else if (mH.dangerous_for >= 50) score += 8; else score += 4;
+  if (mA.dangerous_against >= 70) score += 14; else if (mA.dangerous_against >= 60) score += 10; else if (mA.dangerous_against >= 50) score += 6; else score += 3;
+  return Math.min(score, 30);
+}
+function calcBlocoPosse(mH,mA){
+  let score = 0;
+  if (mH.posse_for >= 58) score += 10; else if (mH.posse_for >= 54) score += 7; else if (mH.posse_for >= 50) score += 5; else score += 2;
+  if (mA.posse_against >= 54) score += 10; else if (mA.posse_against >= 50) score += 7; else if (mA.posse_against >= 46) score += 5; else score += 2;
+  return Math.min(score, 20);
+}
+function calcTermometro(mH,mA){
+  if (!mH || !mA) return {score:0, detalhe:{cantos:0, ataques:0, posse:0}};
+  const cantos = calcBlocoCantos(mH,mA);
+  const ataques = calcBlocoAtaques(mH,mA);
+  const posse = calcBlocoPosse(mH,mA);
+  return { score: parseFloat((((cantos+ataques+posse)/100)*10).toFixed(1)), detalhe:{cantos, ataques, posse} };
+}
+
+function renderTags(tags){ return tags.map(t=>`<span class="tag ${t.c}">${t.n}</span>`).join(''); }
+
+function renderPerfilResumo(titulo, medias, tags){
+  return `
+    <div class="box">
+      <h3>${titulo}</h3>
+      <div class="stat"><span class="label">Jogos</span><span class="value">${medias.count}</span></div>
+      <div class="stat"><span class="label">Cantos total</span><span class="value">${medias.cantosTotal}</span></div>
+      <div class="stat"><span class="label">Cantos a favor</span><span class="value">${medias.cantosAFavor}</span></div>
+      <div class="stat"><span class="label">Cantos cedidos</span><span class="value">${medias.cantosContra}</span></div>
+      <div class="stat"><span class="label">Cantos 1T</span><span class="value">${medias.cantos1T}</span></div>
+      <div class="stat"><span class="label">Cantos 2T</span><span class="value">${medias.cantos2T}</span></div>
+      <div class="stat"><span class="label">Ataques perigosos</span><span class="value">${medias.dangerous_for}</span></div>
+      <div class="stat"><span class="label">Ataques perigosos cedidos</span><span class="value">${medias.dangerous_against}</span></div>
+      <div class="stat"><span class="label">Posse</span><span class="value">${medias.posse_for}</span></div>
+      <div class="stat"><span class="label">Posse cedida</span><span class="value">${medias.posse_against}</span></div>
+      <div style="margin-top:10px">${renderTags(tags)}</div>
+    </div>
+  `;
+}
+
+function renderScore(termo, titulo){
+  const cor = termo.score >= 7 ? '#00B37E' : termo.score >= 5 ? '#FBA94C' : '#f75a68';
+  const label = termo.score >= 8 ? '🔥 Muito quente' : termo.score >= 6.5 ? '✅ Quente' : termo.score >= 5 ? '⚠️ Morno' : '❌ Frio';
+  const width = Math.round((termo.score/10)*100);
+  return `
+    <div class="score-card">
+      <div class="small" style="text-transform:uppercase;letter-spacing:1px">${titulo}</div>
+      <div class="score-number" style="color:${cor}">${termo.score}/10</div>
+      <div class="score-bar"><div class="score-fill" style="width:${width}%;background:${cor}"></div></div>
+      <div class="score-label" style="color:${cor}">${label}</div>
+      <div class="blocos">
+        <div class="bloco"><div class="bloco-ttl">Cantos</div><div class="bloco-val">${termo.detalhe.cantos}</div><div class="bloco-sub">máx. 50</div></div>
+        <div class="bloco"><div class="bloco-ttl">Ataques</div><div class="bloco-val">${termo.detalhe.ataques}</div><div class="bloco-sub">máx. 30</div></div>
+        <div class="bloco"><div class="bloco-ttl">Posse</div><div class="bloco-val">${termo.detalhe.posse}</div><div class="bloco-sub">máx. 20</div></div>
+      </div>
+    </div>
+  `;
+}
+
+function calcForcaOvers(jogos){
+  return {
+    jogos: jogos.length,
+    over45HT_green: jogos.filter(j=>j.cantos1Ttotal >= 5).length,
+    over95FT_green: jogos.filter(j=>j.cantosJogoTotal >= 10).length
+  };
+}
+
+function labelForca(avgPct){
+  if (avgPct >= 75) return {txt:'🔥 Muito forte', cor:'#00B37E'};
+  if (avgPct >= 60) return {txt:'✅ Forte', cor:'#7dd3fc'};
+  if (avgPct >= 45) return {txt:'⚠️ Média', cor:'#FBA94C'};
+  return {txt:'❌ Fraca', cor:'#f75a68'};
+}
+
+function renderForcaEscanteioCamada(homeOvers, awayOvers, titulo){
+  const homeHT = pct(homeOvers.over45HT_green, homeOvers.jogos);
+  const awayHT = pct(awayOvers.over45HT_green, awayOvers.jogos);
+  const homeFT = pct(homeOvers.over95FT_green, homeOvers.jogos);
+  const awayFT = pct(awayOvers.over95FT_green, awayOvers.jogos);
+  const mediaHT = Math.round((homeHT + awayHT)/2);
+  const mediaFT = Math.round((homeFT + awayFT)/2);
+  const lHT = labelForca(mediaHT);
+  const lFT = labelForca(mediaFT);
+
+  return `
+    <div class="box">
+      <h3>${titulo}</h3>
+      <div class="stat"><span class="label">Casa Over 4.5 HT</span><span class="value">${homeOvers.over45HT_green}/${homeOvers.jogos} (${homeHT}%)</span></div>
+      <div class="stat"><span class="label">Fora Over 4.5 HT</span><span class="value">${awayOvers.over45HT_green}/${awayOvers.jogos} (${awayHT}%)</span></div>
+      <div class="stat"><span class="label">Consolidado HT</span><span class="value" style="color:${lHT.cor}">${mediaHT}% — ${lHT.txt}</span></div>
+      <div class="stat"><span class="label">Casa Over 9.5 FT</span><span class="value">${homeOvers.over95FT_green}/${homeOvers.jogos} (${homeFT}%)</span></div>
+      <div class="stat"><span class="label">Fora Over 9.5 FT</span><span class="value">${awayOvers.over95FT_green}/${awayOvers.jogos} (${awayFT}%)</span></div>
+      <div class="stat"><span class="label">Consolidado FT</span><span class="value" style="color:${lFT.cor}">${mediaFT}% — ${lFT.txt}</span></div>
+    </div>
+  `;
+}
+
+function extrairCenarioJogo(singleData, teamId){
+  const game = singleData.game || singleData;
+  const events = getEventsClean(singleData);
+  const teamSide = detectarLadoDoTimeNoJogo(game, teamId);
+  if (!teamSide) return null;
+
+  const s35 = scoreAtExactMinute(events, teamSide, 35);
+  const s69 = scoreAtExactMinute(events, teamSide, 69);
+  const s80 = scoreAtExactMinute(events, teamSide, 80);
+
+  return {
+    score35_time: s35.time,
+    score35_adv: s35.adv,
+    score69_time: s69.time,
+    score69_adv: s69.adv,
+    score80_time: s80.time,
+    score80_adv: s80.adv,
+    cantos37HT: countCorners37HT(events),
+    cantos70mais: countCorners70Plus(events),
+    cantos80mais: countCorners80Plus(events)
+  };
+}
+
+async function mapLimit(items, limit, asyncFn, onProgress){
+  const results = new Array(items.length);
+  let index = 0;
+  let done = 0;
+
+  async function worker(){
+    while (true){
+      const current = index++;
+      if (current >= items.length) break;
+      results[current] = await asyncFn(items[current], current);
+      done++;
+      if (onProgress) onProgress(done, items.length);
+    }
+  }
+
+  const workers = Array.from({length: Math.min(limit, items.length)}, () => worker());
+  await Promise.all(workers);
+  return results;
+}
+
+async function montarJogosCenario(listaBase, teamId, prefixoStatus, progressStart, progressEnd){
+  const ids = listaBase.map(detectFixtureId).filter(Boolean);
+
+  const results = await mapLimit(
+    ids,
+    6,
+    async (fixtureId) => {
+      try{
+        const single = await fetchSingleCached(fixtureId);
+        return extrairCenarioJogo(single, teamId);
+      }catch(e){
+        console.error('Erro cenário jogo', fixtureId, e);
+        return null;
+      }
+    },
+    (done,total) => {
+      document.getElementById('status').innerText = `${prefixoStatus} ${done}/${total}...`;
+      const p = progressStart + ((done/total) * (progressEnd-progressStart));
+      document.getElementById('progBar').style.width = `${p}%`;
+    }
+  );
+
+  return results.filter(Boolean);
+}
+
+const CENARIOS = [
+  { nome:'0x0 aos 35 → 1+ canto 37-HT', desc:'Empate 0x0 aos 35 e sai pelo menos 1 canto entre 37 e HT', apto:j=>j.score35_time===0&&j.score35_adv===0, green:j=>j.cantos37HT>=1 },
+  { nome:'Empatando aos 35 → 1+ canto 37-HT', desc:'Qualquer empate aos 35 e sai pelo menos 1 canto entre 37 e HT', apto:j=>j.score35_time===j.score35_adv, green:j=>j.cantos37HT>=1 },
+  { nome:'Perdendo aos 35 → 1+ canto 37-HT', desc:'Perdendo aos 35 e sai pelo menos 1 canto entre 37 e HT', apto:j=>j.score35_adv>j.score35_time, green:j=>j.cantos37HT>=1 },
+  { nome:'Empate aos 69 → 3+ cantos 70+', desc:'Empatado aos 69 e saem 3 ou mais cantos a partir do 70', apto:j=>j.score69_time===j.score69_adv, green:j=>j.cantos70mais>=3 },
+  { nome:'Perdendo/Empatando aos 80 → 2+ cantos 80+', desc:'Perdendo ou empatando aos 80 e saem 2 ou mais cantos a partir do 80', apto:j=>j.score80_adv>=j.score80_time, green:j=>j.cantos80mais>=2 }
+];
+
+function rodarCenarios(jogos){
+  return CENARIOS.map(c=>{
+    const aptos = jogos.filter(c.apto).length;
+    const greens = jogos.filter(j=>c.apto(j)&&c.green(j)).length;
+    return {...c, aptos, greens, pctVal:pct(greens,aptos)};
+  });
+}
+
+function corPct(v){
+  if (v >= 75) return '#00B37E';
+  if (v >= 60) return '#7dd3fc';
+  if (v >= 45) return '#FBA94C';
+  return '#f75a68';
+}
+
+function classificarConsolidado(hPct, aPct, dnaScore){
+  const media = Math.round((hPct + aPct)/2);
+  if (media >= 75 && dnaScore >= 6.5) return {txt:'🔥 Muito forte', cor:'#00B37E'};
+  if (media >= 60) return {txt:'✅ Forte', cor:'#7dd3fc'};
+  if (media >= 45) return {txt:'⚠️ Médio', cor:'#FBA94C'};
+  return {txt:'❌ Fraco', cor:'#f75a68'};
+}
+
+function renderCenariosBox(titulo, lista){
+  return `
+    <div class="box">
+      <h3>${titulo}</h3>
+      ${lista.map(c=>`
+        <div class="cenario-row">
+          <div class="cenario-left">
+            <div class="cenario-name">${c.nome}</div>
+            <div class="cenario-desc">${c.desc}</div>
+          </div>
+          <div class="cenario-right">
+            <div class="cenario-pct" style="color:${corPct(c.pctVal)}">${c.pctVal}%</div>
+            <div class="cenario-frac">${c.greens}/${c.aptos}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderConsolidado(homeC, awayC, dnaScore){
+  const ordenados = homeC.map((h,idx)=>{
+    const a = awayC[idx];
+    return {
+      nome: h.nome,
+      hPct: h.pctVal,
+      aPct: a.pctVal,
+      media: Math.round((h.pctVal + a.pctVal)/2),
+      cls: classificarConsolidado(h.pctVal, a.pctVal, dnaScore)
+    };
+  }).sort((x,y)=>y.media-x.media);
+
+  const top2 = ordenados.slice(0,2);
+
+  return `
+    <div class="final-box" style="margin-bottom:16px">
+      <h3>Resumo rápido</h3>
+      ${top2.map(t=>`
+        <div class="final-row">
+          <span>${t.nome}</span>
+          <span><b style="color:${t.cls.cor}">${t.cls.txt}</b> — média ${t.media}%</span>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="final-box">
+      <h3>Leitura consolidada dos cenários</h3>
+      ${ordenados.map(t=>`
+        <div class="final-row">
+          <span>${t.nome}</span>
+          <span>
+            Casa: <b style="color:${corPct(t.hPct)}">${t.hPct}%</b> |
+            Fora: <b style="color:${corPct(t.aPct)}">${t.aPct}%</b> |
+            <b style="color:${t.cls.cor}">${t.cls.txt}</b>
+          </span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function switchMainTab(id, el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+
+  if (id === 'main_cenarios') {
+    carregarCenariosSeNecessario();
+  }
+}
+
+function switchSubTab(group, id, el){
+  document.querySelectorAll(`.${group}-tab`).forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll(`.${group}-content`).forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+function renderDNAContent(prefix, game, layers){
+  const defs = [
+    { key:'c20', title:'📋 Completo (20 casa/fora)' },
+    { key:'g10', title:'🔄 Geral (10 mistos)' },
+    { key:'r6', title:'⏱️ Recente (6 casa/fora)' }
+  ];
+
+  return `
+    <div class="subtabs">
+      ${defs.map((d,i)=>`<div class="subtab ${prefix}-tab ${i===0?'active':''}" onclick="switchSubTab('${prefix}', '${prefix}_${d.key}', this)">${d.title}</div>`).join('')}
+    </div>
+    ${defs.map((d,i)=>{
+      const lay = layers[d.key];
+      return `
+        <div id="${prefix}_${d.key}" class="subtab-content ${prefix}-content ${i===0?'active':''}">
+          ${renderScore(lay.termo, d.title)}
+          <div class="grid2">
+            ${renderPerfilResumo(game.homeName, lay.mH, lay.tH)}
+            ${renderPerfilResumo(game.awayName, lay.mA, lay.tA)}
+          </div>
+        </div>
+      `;
+    }).join('')}
+  `;
+}
+
+function renderForcaContent(prefix, layers){
+  const defs = [
+    { key:'c20', title:'📋 Completo (20 casa/fora)' },
+    { key:'g10', title:'🔄 Geral (10 mistos)' },
+    { key:'r6', title:'⏱️ Recente (6 casa/fora)' }
+  ];
+
+  return `
+    <div class="subtabs">
+      ${defs.map((d,i)=>`<div class="subtab ${prefix}-tab ${i===0?'active':''}" onclick="switchSubTab('${prefix}', '${prefix}_${d.key}', this)">${d.title}</div>`).join('')}
+    </div>
+    ${defs.map((d,i)=>{
+      const lay = layers[d.key];
+      return `
+        <div id="${prefix}_${d.key}" class="subtab-content ${prefix}-content ${i===0?'active':''}">
+          ${renderForcaEscanteioCamada(lay.homeOvers, lay.awayOvers, d.title)}
+        </div>
+      `;
+    }).join('')}
+  `;
+}
+
+async function carregarCenariosSeNecessario(){
+  if (appState.cenariosLoaded || appState.cenariosLoading || !appState.game) return;
+
+  appState.cenariosLoading = true;
+  const status = document.getElementById('status');
+  const progBar = document.getElementById('progBar');
+  const area = document.getElementById('cenariosArea');
+
+  try{
+    area.innerHTML = 'Carregando cenários via eventsClean...';
+    progBar.style.width = '35%';
+
+    const [homeCenarioJogos, awayCenarioJogos] = await Promise.all([
+      montarJogosCenario(appState.home20base, appState.homeId, 'Calculando cenários mandante', 35, 67),
+      montarJogosCenario(appState.away20base, appState.awayId, 'Calculando cenários visitante', 67, 95)
+    ]);
+
+    const homeC = rodarCenarios(homeCenarioJogos);
+    const awayC = rodarCenarios(awayCenarioJogos);
+
+    area.outerHTML = `
+      <div id="cenariosLoadedWrap">
+        <div class="grid2">
+          ${renderCenariosBox(`${appState.game.homeName} — em casa últimos 20`, homeC)}
+          ${renderCenariosBox(`${appState.game.awayName} — fora últimos 20`, awayC)}
+        </div>
+        <div class="section-title">📌 Conclusão final</div>
+        ${renderConsolidado(homeC, awayC, appState.layers.c20.termo.score)}
+      </div>
+    `;
+
+    appState.cenariosLoaded = true;
+    status.innerText = '✅ Cenários carregados.';
+    progBar.style.width = '100%';
+  }catch(e){
+    console.error(e);
+    area.innerHTML = `Erro ao carregar cenários: ${e.message}`;
+    status.innerText = '❌ Erro ao carregar cenários.';
+  }finally{
+    appState.cenariosLoading = false;
+  }
+}
+
+async function executar(){
+  const gid = document.getElementById('gameId').value.trim();
+  if(!gid){ alert('Cole o ID!'); return; }
+
+  const btn = document.getElementById('btnAnalise');
+  const prog = document.getElementById('prog');
+  const progBar = document.getElementById('progBar');
+  const status = document.getElementById('status');
+  const resultado = document.getElementById('resultado');
+
+  btn.disabled = true;
+  prog.style.display = 'block';
+  progBar.style.width = '8%';
+  status.innerText = '🔍 Buscando jogo...';
+  resultado.style.display = 'none';
+  resultado.innerHTML = '';
+
+  appState = {
+    game: null,
+    homeId: null,
+    awayId: null,
+    home20base: [],
+    away20base: [],
+    layers: null,
+    cenariosLoaded: false,
+    cenariosLoading: false
+  };
+
+  try{
+    const data = await fetchAPI(gid, 'games=20');
+    const game = data.game;
+    const homeId = game.homeId;
+    const awayId = game.awayId;
+
+    const hH = sortByDateDesc(data.lastGames.home?.asHome || []);
+    const hA = sortByDateDesc(data.lastGames.home?.asAway || []);
+    const aH = sortByDateDesc(data.lastGames.away?.asHome || []);
+    const aA = sortByDateDesc(data.lastGames.away?.asAway || []);
+
+    const recortes = {
+      c20: {
+        home: hH.slice(0,20).map(j=>extrairDNAJogo(j, homeId)).filter(Boolean),
+        away: aA.slice(0,20).map(j=>extrairDNAJogo(j, awayId)).filter(Boolean)
+      },
+      g10: {
+        home: sortByDateDesc([...hH, ...hA]).slice(0,10).map(j=>extrairDNAJogo(j, homeId)).filter(Boolean),
+        away: sortByDateDesc([...aH, ...aA]).slice(0,10).map(j=>extrairDNAJogo(j, awayId)).filter(Boolean)
+      },
+      r6: {
+        home: hH.slice(0,6).map(j=>extrairDNAJogo(j, homeId)).filter(Boolean),
+        away: aA.slice(0,6).map(j=>extrairDNAJogo(j, awayId)).filter(Boolean)
+      }
+    };
+
+    progBar.style.width = '25%';
+    status.innerText = '🧬 Renderizando DNA e força de escanteio...';
+
+    const layers = {};
+    for (const key of Object.keys(recortes)){
+      const mH = calcMedias(recortes[key].home);
+      const mA = calcMedias(recortes[key].away);
+      const tH = classificarPerfil(mH);
+      const tA = classificarPerfil(mA);
+      const termo = calcTermometro(mH,mA);
+      const homeOvers = calcForcaOvers(recortes[key].home);
+      const awayOvers = calcForcaOvers(recortes[key].away);
+      layers[key] = { mH, mA, tH, tA, termo, homeOvers, awayOvers };
+    }
+
+    appState.game = game;
+    appState.homeId = homeId;
+    appState.awayId = awayId;
+    appState.home20base = hH.slice(0,20);
+    appState.away20base = aA.slice(0,20);
+    appState.layers = layers;
+
+    let html = '';
+    html += `
+      <div class="card">
+        <h2>⚽ ${game.homeName} x ${game.awayName}</h2>
+        <div class="small">DNA e força carregam primeiro. Cenários só carregam ao abrir a guia.</div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchMainTab('main_dna', this)">🧬 DNA</div>
+        <div class="tab" onclick="switchMainTab('main_forca', this)">📈 Força de Escanteio</div>
+        <div class="tab" onclick="switchMainTab('main_cenarios', this)">🎯 Cenários</div>
+      </div>
+
+      <div id="main_dna" class="tab-content active">
+        ${renderDNAContent('dna', game, layers)}
+      </div>
+
+      <div id="main_forca" class="tab-content">
+        ${renderForcaContent('forca', layers)}
+      </div>
+
+      <div id="main_cenarios" class="tab-content">
+        <div id="cenariosArea" class="loading-box">
+          Clique nesta guia para carregar os cenários.
+        </div>
+      </div>
+    `;
+
+    resultado.innerHTML = html;
+    resultado.style.display = 'block';
+
+    progBar.style.width = '100%';
+    status.innerText = '✅ DNA e força de escanteio carregados.';
+  }catch(e){
+    console.error(e);
+    status.innerText = '❌ Erro: ' + e.message;
+  }
+
+  btn.disabled = false;
+}
+</script>
+</body>
+</html>
