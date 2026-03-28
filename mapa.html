@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CornerPro Heatmap — Layout Bet365</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
+        :root {
+            --bg-body: #202020;
+            --bg-card: #282828;
+            --bg-input: #383838;
+            --border-color: #3f3f3f;
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --bet-green: #00c781; 
+            --bet-green-hover: #00e092;
+            --bet-yellow: #FFDF00;
+            --bet-fire: #ff4a4a;
+            --danger: #ff4a4a;
+            --telegram: #2AABEE;
+            --simulador: #a855f7; 
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); padding: 15px; line-height: 1.4; }
+        .container { max-width: 1250px; margin: 0 auto; }
+
+        /* NAV */
+        .app-nav { display: flex; gap: 8px; margin-bottom: 20px; padding-bottom: 15px; overflow-x: auto; border-bottom: 1px solid var(--border-color); }
+        .nav-btn { background: var(--bg-card); color: var(--text-main); border: 2px solid transparent; padding: 8px 20px; border-radius: 50px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all .2s ease; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .nav-btn:hover { background: #333; }
+        .nav-btn.active { background: var(--bet-green); color: #000; border-color: var(--bet-green); font-weight: 700; }
+        .nav-btn-promo { background: linear-gradient(var(--bg-card), var(--bg-card)) padding-box, linear-gradient(to right, var(--bet-yellow), var(--bet-green)) border-box; color: #fff; }
+        .nav-btn-promo.active { background: var(--bet-green); color: #000; border: 2px solid var(--bet-green); }
+        .badge-round { background: var(--bet-yellow); color: #000; border-radius: 12px; min-width: 20px; height: 20px; padding: 0 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+        .nav-btn-promo.active .badge-round { background: #000; color: var(--bet-green); }
+        .nav-btn-sim { background: var(--bg-card); border: 1px solid var(--simulador); color: var(--text-main); }
+        .nav-btn-sim.active { background: var(--simulador); color: #fff; border-color: var(--simulador); }
+
+        /* CARDS & FORMS */
+        .card { background: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+        .card-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: #fff; }
+        .grid-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 15px; background: var(--bg-body); padding: 14px; border-radius: 10px; border: 1px solid var(--border-color); }
+        label { display: block; margin-bottom: 6px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; transition: all 0.3s; }
+        input[type="text"], input[type="number"], select { width: 100%; background: var(--bg-input); color: #fff; border: 1px solid transparent; padding: 10px 12px; border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; transition: all 0.3s; font-weight: 500; }
+        input:focus, select:focus { border-color: var(--bet-green); }
+        select:disabled, input:disabled { background: #222; color: #555; cursor: not-allowed; border-color: transparent !important; }
+
+        .input-group-minmax { display: flex; gap: 8px; }
+        .input-group-minmax input { text-align: center; }
+        .input-group-minmax input::placeholder { color: #666; font-size: 10px; }
+
+        /* BOTOES */
+        .btn { border: none; padding: 10px 20px; border-radius: 50px; cursor: pointer; font-weight: 700; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: var(--bet-green); color: #000; }
+        .btn-primary:hover:not(:disabled) { background: var(--bet-green-hover); transform: scale(1.02); }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover:not(:disabled) { filter: brightness(1.1); transform: scale(1.02); }
+        .btn-secondary { background: var(--bg-input); color: #fff; border: 1px solid var(--border-color); }
+        .btn-secondary:hover:not(:disabled) { background: #444; transform: scale(1.02); }
+        .btn-warning { background: var(--bet-yellow); color: #000; }
+        .btn-warning:hover:not(:disabled) { filter: brightness(1.1); transform: scale(1.02); }
+        .btn-simulador { background: var(--simulador); color: #fff; }
+        .btn-simulador:hover:not(:disabled) { filter: brightness(1.1); transform: scale(1.02); }
+
+        /* PROGRESS & TABLE */
+        .status-bar { padding: 12px 16px; border-radius: 6px; font-size: 13px; margin-top: 12px; display: none; font-weight: 700; color:#000; }
+        .status-bar.loading { display: block; background: #e0f2fe; border-left: 4px solid #0ea5e9; }
+        .status-bar.error { display: block; background: #fee2e2; border-left: 4px solid var(--danger); }
+        .status-bar.ok { display: block; background: var(--bet-green); border-left: 4px solid #000; }
+        progress { width: 100%; height: 12px; border-radius: 6px; overflow: hidden; background: var(--bg-input); border: none; }
+        progress::-webkit-progress-value { background: var(--bet-green); transition: width 0.4s ease; }
+        .progress-container { display: none; margin-top: 15px; }
+        .progress-text { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 6px; font-weight: 600; }
+        .summary-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .summary-card { background: var(--bg-body); border-radius: 10px; padding: 16px; text-align: center; }
+        .summary-val { font-size: 1.6rem; font-weight: 900; letter-spacing: -1px; line-height: 1; }
+        .summary-lbl { font-size: 10px; color: var(--text-muted); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+        .table-container { max-height: 500px; overflow-y: auto; overflow-x: auto; border-radius: 8px; border: 1px solid var(--border-color); }
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+        .data-table th { padding: 12px 10px; color: var(--text-muted); font-weight: 700; background: var(--bg-body); white-space: nowrap; text-align: left; font-size: 10px; text-transform: uppercase; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid var(--border-color); }
+        .data-table td { padding: 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; background: var(--bg-card); }
+        .data-table tr:hover td { background: var(--bg-input); }
+        .badge { display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 4px; font-size: 10px; font-weight: 800; min-width: 40px; }
+        .bg-green { background: rgba(0, 199, 129, 0.1); color: var(--bet-green); border: 1px solid rgba(0, 199, 129, 0.3); }
+        .bg-yellow { background: rgba(255, 223, 0, 0.1); color: var(--bet-yellow); border: 1px solid rgba(255, 223, 0, 0.3); }
+        .bg-red { background: rgba(255, 74, 74, 0.1); color: var(--danger); border: 1px solid rgba(255, 74, 74, 0.3); }
+        .bg-purple { background: rgba(168, 85, 247, 0.1); color: var(--simulador); border: 1px solid rgba(168, 85, 247, 0.3); }
+        .flank-mini { display: flex; height: 20px; border-radius: 4px; overflow: hidden; min-width: 120px; border: 1px solid #111; }
+        .flank-mini div { display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+        .fm-esq { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .fm-cen { background: linear-gradient(135deg, #71717a, #52525b); }
+        .fm-dir { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+        .checkbox-container { display: flex; align-items: center; gap: 10px; background: rgba(168, 85, 247, 0.1); border: 1px solid var(--simulador); padding: 12px 15px; border-radius: 8px; cursor: pointer; margin-bottom: 15px; }
+        .checkbox-container input { width: 18px; height: 18px; cursor: pointer; accent-color: var(--simulador); }
+        .checkbox-container span { font-size: 13px; font-weight: 700; color: #fff; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-body); }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #777; }
+        
+        .bot-setup-box { background: #111; border: 1px dashed var(--bet-green); padding: 15px; border-radius: 6px; font-family: monospace; font-size: 13px; color: #a1a1aa; line-height: 1.6; white-space: pre-wrap; }
+        .bot-setup-hl { color: var(--bet-green); font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="app-nav">
+        <button class="nav-btn active" id="nav-coletor" onclick="switchView('coletor')">📦 Coletor Histórico</button>
+        <button class="nav-btn" id="nav-dados" onclick="switchView('dados')">📊 Base de Dados</button>
+        <button class="nav-btn nav-btn-promo" id="nav-padroes" onclick="switchView('padroes')">
+            🤖 Scanner de Padrões 
+            <div class="badge-round" id="navBadgeCount">0</div>
+        </button>
+        <button class="nav-btn nav-btn-sim" id="nav-simulador" onclick="switchView('simulador')">
+            🎯 Simulador de Limiares
+        </button>
+    </div>
+
+    <!-- VIEW: COLETOR -->
+    <div id="view-coletor">
+        <div class="card">
+            <div class="card-title">📦 Coletor Histórico de Heatmap</div>
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:15px;">O robô extrairá o mapa de calor aos 34 minutos, linha do tempo de escanteios e gols.</p>
+            <input type="hidden" id="cTokenInput" value="45003_ec8357116e">
+            <div class="grid-filters">
+                <div><label>📅 Histórico</label><select id="cDiasSelect"><option value="1">1 dia</option><option value="2">2 dias</option><option value="3" selected>3 dias</option><option value="5">5 dias</option><option value="7">7 dias</option><option value="15">15 dias</option></select></div>
+                <div><label>⏱️ Corte (MM:SS)</label><input type="text" id="cCorteInput" value="34:48" placeholder="34:48"></div>
+                <div><label>⚡ Threads</label><select id="cParallelSelect"><option value="2">2</option><option value="4" selected>4</option><option value="6">6</option></select></div>
+                <div><label>🛡️ Pausa Anti-Ban</label><select id="cDelaySelect"><option value="500">0.5s</option><option value="1500" selected>1.5s</option><option value="3000">3.0s</option></select></div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:10px;">
+                <button class="btn btn-primary" id="btnStartColetor" onclick="startColetor()" style="flex:1;">🚀 Iniciar Varredura</button>
+                <button class="btn btn-danger" id="btnStopColetor" onclick="stopColetor()" style="display:none;min-width:130px;">⏹ Pausar</button>
+            </div>
+            <div class="progress-container" id="cProgressContainer"><progress id="cProgress" value="0" max="100"></progress><div class="progress-text" id="cProgressText">Preparando...</div></div>
+            <div class="status-bar" id="cStatus"></div>
+        </div>
+        <div id="cSummaryContainer" style="display:none;">
+            <div class="summary-row">
+                <div class="summary-card"><div class="summary-val" style="color:#fff;" id="cSTotalDias">0</div><div class="summary-lbl">Dias</div></div>
+                <div class="summary-card"><div class="summary-val" style="color:#3b82f6;" id="cSTotalJogos">0</div><div class="summary-lbl">Jogos</div></div>
+                <div class="summary-card"><div class="summary-val" style="color:var(--bet-green);" id="cSColetados">0</div><div class="summary-lbl">Salvos</div></div>
+                <div class="summary-card"><div class="summary-val" style="color:var(--danger);" id="cSSemDados">0</div><div class="summary-lbl">Sem Dados</div></div>
+                <div class="summary-card"><div class="summary-val" style="color:var(--bet-yellow);" id="cSSkipped">0</div><div class="summary-lbl">Existentes</div></div>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:15px;">
+                <button class="btn btn-secondary" style="border-color:var(--bet-green); color:var(--bet-green);" onclick="downloadJSON()">📥 Baixar JSON</button>
+                <button class="btn btn-secondary" onclick="downloadCSV()">📊 Baixar Excel</button>
+            </div>
+        </div>
+        <div id="cLogContainer" style="display:none;">
+            <div class="card" style="padding:15px;"><div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:8px;">🖥️ Console</div><div id="cLog" style="max-height:180px;overflow-y:auto;font-size:11px;font-family:monospace;color:#a1a1aa; background:#111; padding:10px; border-radius:6px;"></div></div>
+        </div>
+    </div>
+
+    <!-- VIEW: DADOS -->
+    <div id="view-dados" style="display:none;">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom: 15px;">
+                <div class="card-title" style="margin:0;">📊 Base de Dados Analítica</div>
+                <button class="btn btn-danger" onclick="limparDados()">🗑 Limpar Tela</button>
+            </div>
+            <div class="summary-row" id="dSummaryRow" style="display:none;">
+                <div class="summary-card"><div class="summary-val" style="color:var(--bet-yellow);" id="dTotal">0</div><div class="summary-lbl">Jogos Coletados</div></div>
+                <div class="summary-card"><div class="summary-val" style="color:var(--bet-green);" id="dAvgPres">-</div><div class="summary-lbl">Presença Média</div></div>
+                <div class="summary-card"><div class="summary-val" style="color:#3b82f6;" id="dAvgEsq">-</div><div class="summary-lbl">Força Esquerda</div></div>
+                <div class="summary-card"><div class="summary-val" style="color:#ef4444;" id="dAvgDir">-</div><div class="summary-lbl">Força Direita</div></div>
+            </div>
+        </div>
+        <div id="dTableCard" style="display:none; margin-bottom:15px;">
+            <div class="table-container"><table class="data-table" id="dTable"><thead><tr></tr></thead><tbody></tbody></table></div>
+        </div>
+    </div>
+
+    <!-- VIEW: PADRÕES -->
+    <div id="view-padroes" style="display:none;">
+        <div class="card" style="border-top: 3px solid var(--bet-yellow);">
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color);">
+                <div><h2 style="font-size:1.2rem; font-weight:900; margin-bottom:4px; color:var(--bet-green);">Scanner de Padrões</h2><p style="font-size:12px;color:var(--text-muted); margin:0;">Descubra tendências isoladas com base no Heatmap.</p></div>
+                <button class="btn btn-secondary" onclick="document.getElementById('uploadJsonInput2').click()">📤 Importar JSON Externo</button>
+                <input type="file" id="uploadJsonInput2" accept=".json" style="display:none;" onchange="handleJsonUpload2(event)">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <div style="font-size:11px;color:var(--bet-green);text-transform:uppercase;margin-bottom:8px;font-weight:800;">1. Configuração de Mercado</div>
+                <div class="grid-filters">
+                    <div>
+                        <label>🎯 Foco da Varredura</label>
+                        <select id="pStrategy" style="border: 1px solid var(--bet-green);" onchange="updateStrategyUI()">
+                            <optgroup label="Mercados de Escanteios">
+                                <option value="total" selected>Totais (Metas 2ºT)</option>
+                                <option value="home">Mandante (Casa 2ºT)</option>
+                                <option value="away">Visitante (Fora 2ºT)</option>
+                                <option value="37ht">Canto Limite HT</option>
+                                <option value="fogo" style="color:var(--bet-fire); font-weight:bold;">&#128293; JOGOS FOGO (Escanteios)</option>
+                            </optgroup>
+                            <optgroup label="Mercados de Gols">
+                                <option value="g_05_00ht">⚽ Over 0.5 FT (Exige 0x0 HT)</option>
+                                <option value="g_15">⚽ Over 1.5 FT (Qualquer HT)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div><label id="lblCornersAtCut">🚩 Range no Corte (34')</label><select id="pCornersAtCut" style="border: 1px solid var(--bet-yellow);"><option value="any">Qualquer Quantidade</option><option value="0-1">0 a 1 Canto</option><option value="1-2">1 a 2 Cantos</option><option value="2-3">2 a 3 Cantos</option><option value="3-4">3 a 4 Cantos</option><option value="4-5">4 a 5 Cantos</option><option value="5-6">5 a 6 Cantos</option><option value="6-7">6 a 7 Cantos</option><option value="7-8">7 a 8 Cantos</option><option value="9-99">9 ou mais (9+)</option></select></div>
+                    <div><label id="lblTarget2ndHalf">🎯 Meta a Bater</label><select id="pTarget2ndHalf" style="color:var(--bet-green); font-weight:bold;"><option value="3">+3 Cantos</option><option value="4">+4 Cantos</option><option value="5" selected>+5 Cantos</option><option value="6">+6 Cantos</option><option value="7">+7 Cantos</option><option value="8">+8 Cantos</option><option value="9">+9 Cantos</option><option value="10">+10 Cantos</option></select></div>
+                </div>
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <div style="font-size:11px;color:var(--bet-yellow);text-transform:uppercase;margin-bottom:8px;font-weight:800;">2. Contexto do Jogo</div>
+                <div class="grid-filters">
+                    <div><label id="lblContextoPlacar">⏱️ Placar no Corte</label><select id="pContextoPlacar"><option value="any">Qualquer Placar</option><option value="empate">Empatado</option><option value="casa_empatando_perdendo">Mandante Empatando/Perdendo</option><option value="visit_empatando_perdendo">Visitante Empatando/Perdendo</option></select></div>
+                    <div><label id="lblContextoOdd">📈 Odd Pré-Live</label><select id="pContextoOdd"><option value="any">Qualquer Odd</option><option value="casa_fav">Casa Favorita (≤ 1.80)</option><option value="visit_fav">Visit. Favorito (≤ 1.80)</option><option value="casa_zebra">Casa Zebra (≥ 3.00)</option></select></div>
+                </div>
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <div style="font-size:11px;color:#fff;text-transform:uppercase;margin-bottom:8px;font-weight:800;">3. Exigência Matemática</div>
+                <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                    <div style="flex:1;"><label id="lblMinWinRate">🎯 Taxa Acerto Min (%)</label><input type="number" id="pMinWinRate" value="70" min="1" max="100" step="1" style="font-weight:700; font-size:14px; border-color:var(--bet-green);"></div>
+                    <div style="flex:1;"><label>📊 Amostra Mínima (Jogos)</label><input type="number" id="pMinGames" value="10" min="1" style="font-weight:700; font-size:14px;"></div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="buscarPadroes()" style="width:100%; padding:14px; font-size:14px; margin-bottom:15px;">🔍 Varrer Padrões Agora</button>
+
+            <div id="pResults" style="display: none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap:wrap; gap:8px;">
+                    <div class="card-title" style="margin:0; color:var(--bet-green); font-size:1.1rem;" id="pResultsTitle">🏆 Padrões Encontrados</div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn btn-warning" onclick="mostrarRankingPadroes()" style="padding: 8px 16px; font-size:12px; font-weight:800;">📊 Melhores Ligas/Times</button></div>
+                </div>
+                <div class="table-container"><table class="data-table" id="pTable"><thead><tr></tr></thead><tbody></tbody></table></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW: SIMULADOR GÊMEO -->
+    <div id="view-simulador" style="display:none;">
+        <div class="card" style="border-top: 3px solid var(--simulador);">
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom: 10px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color);">
+                <div>
+                    <h2 style="font-size:1.2rem; font-weight:900; margin-bottom:4px; color:var(--simulador);">🎯 Simulador de Limiares (Clone do Scanner)</h2>
+                    <p style="font-size:12px;color:var(--text-muted); margin:0;">
+                        Defina Mínimo e Máximo e gere automaticamente o setup para o seu bot.
+                    </p>
+                </div>
+                <button class="btn btn-primary" onclick="gerarSetupBot()">🤖 Copiar Setup para o Bot</button>
+            </div>
+
+            <label class="checkbox-container">
+                <input type="checkbox" id="simStrictOrder" checked>
+                <span>📐 Exigir Hierarquia (Forçar que o Maior Número digitado seja o Maior Flanco do jogo, igual o Scanner faz)</span>
+            </label>
+
+            <div class="grid-filters">
+                <div>
+                    <label>🔥 Presença (%)</label>
+                    <div class="input-group-minmax">
+                        <input type="number" id="simPresMin" value="60" placeholder="Min" style="border-bottom: 2px solid #fff;">
+                        <input type="number" id="simPresMax" value="100" placeholder="Max" style="border-bottom: 2px solid #fff;">
+                    </div>
+                </div>
+                <div>
+                    <label>🟦 Esquerdo (%)</label>
+                    <div class="input-group-minmax">
+                        <input type="number" id="simEsqMin" value="0" placeholder="Min" style="border-bottom: 2px solid #3b82f6;">
+                        <input type="number" id="simEsqMax" value="100" placeholder="Max" style="border-bottom: 2px solid #3b82f6;">
+                    </div>
+                </div>
+                <div>
+                    <label>⬜ Centro (%)</label>
+                    <div class="input-group-minmax">
+                        <input type="number" id="simCenMin" value="25" placeholder="Min" style="border-bottom: 2px solid #71717a;">
+                        <input type="number" id="simCenMax" value="35" placeholder="Max" style="border-bottom: 2px solid #71717a;">
+                    </div>
+                </div>
+                <div>
+                    <label>🟥 Direito (%)</label>
+                    <div class="input-group-minmax">
+                        <input type="number" id="simDirMin" value="38" placeholder="Min" style="border-bottom: 2px solid #ef4444;">
+                        <input type="number" id="simDirMax" value="100" placeholder="Max" style="border-bottom: 2px solid #ef4444;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-filters">
+                <div>
+                    <label>🚩 Cantos no Corte: Mínimo</label>
+                    <input type="number" id="simCantoMin" value="0" min="0">
+                </div>
+                <div>
+                    <label>🚩 Cantos no Corte: Máximo</label>
+                    <input type="number" id="simCantoMax" value="10" min="0">
+                </div>
+                <div>
+                    <label>🎯 Ocultar Mercados Abaixo de (%)</label>
+                    <input type="number" id="simMinWr" value="65" min="1" max="100" style="color:var(--simulador); font-weight:bold;">
+                </div>
+            </div>
+
+            <button class="btn btn-simulador" onclick="rodarSimulacao()" style="width:100%; padding:14px; font-size:14px; margin-bottom:15px;">🔍 Testar Este Cenário em Todos os Mercados</button>
+
+            <!-- RESULTADOS SIMULADOR -->
+            <div id="simResults" style="display: none;">
+                <div style="background:var(--bg-body); padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid var(--border-color); text-align:center;">
+                    <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Jogos Históricos Filtrados com a sua Regra</div>
+                    <div style="font-size:2rem; font-weight:900; color:#fff; margin-top:5px;" id="simTotalJogos">0</div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table" id="simTable">
+                        <thead>
+                            <tr>
+                                <th style="font-size:11px;">Mercado Alvo</th>
+                                <th style="text-align:center;">Qtd Jogos Válidos</th>
+                                <th style="text-align:center;color:var(--bet-green);">Greens &#10004;</th>
+                                <th style="text-align:center;">WinRate (%)</th>
+                                <th style="text-align:center;">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==========================================
+// GLOBALS & UPLOAD
+// ==========================================
+let allCollected = []; 
+
+function handleJsonUpload2(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!Array.isArray(data)) throw new Error("JSON inválido.");
+            if (allCollected.length > 0) {
+                if (confirm("Somar estes jogos aos já existentes na tela?")) {
+                    data.forEach(novoJogo => { const idx = allCollected.findIndex(x => x.gameId === novoJogo.gameId); if (idx >= 0) allCollected[idx] = novoJogo; else allCollected.push(novoJogo); });
+                } else allCollected = data;
+            } else allCollected = data;
+            renderDadosView(); document.getElementById('uploadJsonInput2').value = ""; alert(`✅ Base carregada! Total: ${allCollected.length} jogos.`);
+        } catch (err) { alert("Erro: " + err.message); }
+    };
+    reader.readAsText(file);
+}
+
+// ==========================================
+// VIEWS E NAVEGAÇÃO
+// ==========================================
+function switchView(id) {
+    ['coletor','dados','padroes','simulador'].forEach(v => { 
+        document.getElementById('view-' + v).style.display = v === id ? 'block' : 'none'; 
+        document.getElementById('nav-' + v).classList.toggle('active', v === id); 
+    });
+    if (id === 'dados') renderDadosView();
+}
+
+// ==========================================
+// GERADOR DE SETUP PARA O BOT (HIERARQUIA MATEMÁTICA)
+// ==========================================
+function gerarSetupBot() {
+    const pMin = document.getElementById('simPresMin').value || 0;
+    const pMax = document.getElementById('simPresMax').value || 100;
+    const eMin = parseFloat(document.getElementById('simEsqMin').value) || 0;
+    const eMax = parseFloat(document.getElementById('simEsqMax').value) || 100;
+    const cMin = parseFloat(document.getElementById('simCenMin').value) || 0;
+    const cMax = parseFloat(document.getElementById('simCenMax').value) || 100;
+    const dMin = parseFloat(document.getElementById('simDirMin').value) || 0;
+    const dMax = parseFloat(document.getElementById('simDirMax').value) || 100;
+
+    const strict = document.getElementById('simStrictOrder').checked;
+
+    let arr = [
+        {nome: 'Esquerdo', min: eMin, max: eMax, id: 'esq'},
+        {nome: 'Centro', min: cMin, max: cMax, id: 'cen'},
+        {nome: 'Direito', min: dMin, max: dMax, id: 'dir'}
+    ];
+
+    // Ordena do Flanco mais forte (maior Mínimo) para o mais fraco
+    arr.sort((a,b) => b.min - a.min);
+
+    let txtAviso = "";
+    if (strict) {
+        // Trava os máximos para garantir a hierarquia: o Max do inferior tem que ser menor que o Min do superior.
+        arr[1].max = Math.min(arr[1].max, arr[0].min - 1);
+        arr[2].max = Math.min(arr[2].max, arr[1].min - 1);
+        
+        // Evita números negativos caso as regras do usuário não façam sentido
+        if(arr[1].max < 0) arr[1].max = 0;
+        if(arr[2].max < 0) arr[2].max = 0;
+        
+        txtAviso = `<div style="margin-top:15px; font-size:11px; color:var(--bet-yellow);">⚠️ <b>Modo Hierarquia Ativado:</b> O sistema ajustou automaticamente o campo "Máximo" dos flancos menores para que eles matematicamente nunca consigam ultrapassar o Flanco Líder (${arr[0].nome}).</div>`;
+    }
+
+    let html = `
+    <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; justify-content:center; align-items:center; padding:20px;" id="botModal">
+        <div style="background:var(--bg-card); border-radius:12px; width:100%; max-width:500px; display:flex; flex-direction:column; border: 2px solid var(--bet-green);">
+            <div style="padding:15px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; color:#fff; font-size:16px;">🤖 Configuração para o Bot</h3>
+                <button onclick="document.getElementById('botModal').remove()" style="background:transparent; border:none; color:#fff; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <div style="padding:20px;">
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:15px;">Copie os valores exatos abaixo e cole na configuração do seu bot na CornerPro para replicar este padrão 100% no automático:</div>
+                
+                <div class="bot-setup-box">
+<span style="color:#fff;">🔥 Presença:</span> Min <span class="bot-setup-hl">${pMin}%</span> | Max <span class="bot-setup-hl">${pMax}%</span>
+
+<span style="color:#fff;">1º Flanco (${arr[0].nome}):</span> Min <span class="bot-setup-hl">${arr[0].min}%</span> | Max <span class="bot-setup-hl">${arr[0].max}%</span>
+<span style="color:#fff;">2º Flanco (${arr[1].nome}):</span> Min <span class="bot-setup-hl">${arr[1].min}%</span> | Max <span class="bot-setup-hl">${arr[1].max}%</span>
+<span style="color:#fff;">3º Flanco (${arr[2].nome}):</span> Min <span class="bot-setup-hl">${arr[2].min}%</span> | Max <span class="bot-setup-hl">${arr[2].max}%</span>
+                </div>
+                ${txtAviso}
+            </div>
+        </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
+// ==========================================
+// SIMULADOR: LÓGICA GÊMEA DO SCANNER
+// ==========================================
+window.simFilteredGames = [];
+
+function rodarSimulacao() {
+    if (!allCollected || allCollected.length === 0) { alert("Base de dados vazia. Faça coleta ou importe um JSON."); return; }
+
+    const vPresMin = parseFloat(document.getElementById('simPresMin').value) || 0;
+    const vPresMax = parseFloat(document.getElementById('simPresMax').value) || 100;
+    const vEsqMin = parseFloat(document.getElementById('simEsqMin').value) || 0;
+    const vEsqMax = parseFloat(document.getElementById('simEsqMax').value) || 100;
+    const vCenMin = parseFloat(document.getElementById('simCenMin').value) || 0;
+    const vCenMax = parseFloat(document.getElementById('simCenMax').value) || 100;
+    const vDirMin = parseFloat(document.getElementById('simDirMin').value) || 0;
+    const vDirMax = parseFloat(document.getElementById('simDirMax').value) || 100;
+    
+    const vCantoMin = parseInt(document.getElementById('simCantoMin').value) || 0;
+    const vCantoMax = parseInt(document.getElementById('simCantoMax').value) || 99;
+    const vMinWr = parseFloat(document.getElementById('simMinWr').value) || 0;
+    
+    const strictOrder = document.getElementById('simStrictOrder').checked;
+
+    let flancos = [
+        { key: 'esquerdo', val: vEsqMin },
+        { key: 'centro', val: vCenMin },
+        { key: 'direito', val: vDirMin }
+    ];
+    flancos.sort((a, b) => b.val - a.val); 
+    const f1Key = flancos[0].key; const f2Key = flancos[1].key; const f3Key = flancos[2].key;
+
+    window.simFilteredGames = allCollected.map(r => {
+        let cutoffMin = r.heatmap.corteSeg ? Math.floor(r.heatmap.corteSeg / 60) : 34;
+        let cCut = r.corners.events ? r.corners.events.filter(c => c.min <= cutoffMin).length : r.corners.ht;
+        let cHT = r.corners.ht; let cFT = r.corners.ft; let c2nd = cFT - cHT;
+        let green37 = (r.cornerIntervals && r.cornerIntervals['37-HT'] && r.cornerIntervals['37-HT'].t >= 1);
+        
+        let ftPts = r.score ? r.score.split('-') : [0,0];
+        let ftGoals = (parseInt(ftPts[0])||0) + (parseInt(ftPts[1])||0);
+        let htPts = r.htScore ? r.htScore.split('-') : [0,0];
+        let htGoals = (parseInt(htPts[0])||0) + (parseInt(htPts[1])||0);
+
+        return { ...r, cCut, cHT, c2nd, cFT, green37, ftGoals, htGoals };
+    }).filter(r => {
+        if (!r.heatmap) return false;
+        let passLimits = (r.heatmap.presenca >= vPresMin && r.heatmap.presenca <= vPresMax) &&
+                         (r.heatmap.esquerdo >= vEsqMin && r.heatmap.esquerdo <= vEsqMax) &&
+                         (r.heatmap.centro >= vCenMin && r.heatmap.centro <= vCenMax) &&
+                         (r.heatmap.direito >= vDirMin && r.heatmap.direito <= vDirMax) &&
+                         (r.cCut >= vCantoMin && r.cCut <= vCantoMax);
+        if (!passLimits) return false;
+        if (strictOrder) { if (!(r.heatmap[f1Key] >= r.heatmap[f2Key] && r.heatmap[f2Key] >= r.heatmap[f3Key])) return false; }
+        return true;
+    });
+
+    const tJogos = window.simFilteredGames.length;
+    document.getElementById('simTotalJogos').innerText = tJogos;
+    document.getElementById('simResults').style.display = 'block';
+
+    const tbody = document.querySelector('#simTable tbody');
+    if (tJogos === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;">❌ Nenhum jogo atende aos filtros.</td></tr>`; return; }
+
+    const targets = [ 
+        { key: '37ht', label: 'Canto Limite (37-HT)' }, 
+        { key: '5', label: '+5 Cantos (2º Tempo)' }, 
+        { key: '6', label: '+6 Cantos (2º Tempo)' }, 
+        { key: 'g_05_00ht', label: '⚽ Over 0.5 FT (Apenas Jogos 0x0 HT)' },
+        { key: 'g_15', label: '⚽ Over 1.5 FT' }
+    ];
+    
+    let html = '';
+    
+    let results = targets.map(t => {
+        let marketTotal = 0; let greens = 0;
+        window.simFilteredGames.forEach(g => {
+            if (t.key === 'g_05_00ht') {
+                if (g.htGoals === 0) { marketTotal++; if(g.ftGoals >= 1) greens++; }
+            } else if (t.key === 'g_15') {
+                marketTotal++; if(g.ftGoals >= 2) greens++;
+            } else if (t.key === '37ht') {
+                marketTotal++; if(g.green37) greens++;
+            } else {
+                marketTotal++; if(g.c2nd >= parseInt(t.key)) greens++;
+            }
+        });
+        let wr = marketTotal > 0 ? (greens / marketTotal) * 100 : 0; 
+        return { ...t, greens, marketTotal, wr };
+    }).filter(res => res.marketTotal > 0 && res.wr >= vMinWr);
+
+    if (results.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--danger);font-weight:700;">❌ Nenhum mercado bateu a meta de ${vMinWr}%.</td></tr>`; return; }
+
+    results.forEach(res => {
+        html += `<tr>
+            <td style="font-weight:800; font-size:12px;">${res.label}</td>
+            <td style="text-align:center; font-weight:700;">${res.marketTotal} <span style="font-size:10px; color:#888;">(de ${tJogos})</span></td>
+            <td style="text-align:center; color:var(--bet-green); font-weight:900;">${res.greens}</td>
+            <td style="text-align:center;"><span class="badge bg-purple" style="font-size:12px;">${res.wr.toFixed(1)}%</span></td>
+            <td style="text-align:center;"><button class="btn btn-secondary" style="padding:6px 12px; font-size:10px;" onclick="showSimGames('${res.key}')">Ver Jogos</button></td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+function showSimGames(targetKey) {
+    if (!window.simFilteredGames || window.simFilteredGames.length === 0) return;
+    
+    window.simFilteredGames.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+    let label = targetKey === '37ht' ? 'Canto Limite (37-HT)' : (targetKey.startsWith('g_') ? 'Mercado de Gols' : `+${targetKey} Cantos no 2ºT`);
+    let html = `<div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; justify-content:center; align-items:center; padding:20px;" id="sModal"><div style="background:var(--bg-card); border-radius:12px; width:100%; max-width:800px; max-height:85vh; display:flex; flex-direction:column; border: 2px solid var(--simulador);"><div style="padding:15px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;"><h3 style="margin:0; color:#fff; font-size:14px;">🎯 Histórico (${label})</h3><button onclick="document.getElementById('sModal').remove()" style="background:transparent; border:none; color:#fff; font-size:24px; cursor:pointer;">&times;</button></div><div style="padding:15px 20px; overflow-y:auto; flex:1;"><ul style="list-style:none; padding:0; margin:0; font-size:12px;">`;
+
+    window.simFilteredGames.forEach(m => {
+        // Ignora jogos que não entram no mercado de 0.5 HT 0x0
+        if (targetKey === 'g_05_00ht' && m.htGoals !== 0) return;
+
+        let isGreen = false; 
+        if(targetKey === '37ht') isGreen = m.green37; 
+        else if (targetKey === 'g_05_00ht') isGreen = (m.ftGoals >= 1);
+        else if (targetKey === 'g_15') isGreen = (m.ftGoals >= 2);
+        else isGreen = m.c2nd >= parseInt(targetKey);
+        
+        let badge = isGreen ? `<span class="badge bg-green">GREEN</span>` : `<span class="badge bg-red">RED</span>`;
+        let contextText = "";
+        
+        if (targetKey.startsWith('g_')) {
+            contextText = `HT: <b style="color:#fff">${m.htScore||'0-0'}</b> &#10145;&#65039; FT: <b style="color:${isGreen ? 'var(--bet-green)' : 'var(--danger)'}; font-size:13px;">${m.score||'0-0'}</b>`;
+        } else if (targetKey === '37ht') {
+            contextText = isGreen ? `<b style="color:var(--bet-green); font-size:11px;">SAIU CANTO LIMITE!</b>` : `<b style="color:var(--danger); font-size:11px;">NÃO SAIU (RED)</b>`;
+        } else {
+            contextText = `HT: <b style="color:#fff">${m.cHT}</b> &#10145;&#65039; FEZ NO 2ºT: <b style="color:${isGreen ? 'var(--bet-green)' : 'var(--danger)'}; font-size:13px;">+${m.c2nd}</b>`;
+        }
+
+        let infoGols = (!targetKey.startsWith('g_') && m.htScore) ? `| Placar HT: <b style="color:#fff">${m.htScore}</b>` : '';
+        let dataFmt = m.date ? m.date.substring(0, 16) : '';
+
+        html += `<li style="padding:10px 0; border-bottom:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between;"><div style="display:flex; align-items:center; flex:1;"><div style="min-width:55px;">${badge}</div> <div style="margin-left:12px; width:100%;"><div style="font-weight:700; color:#fff; font-size:12px;">${m.homeName} vs ${m.awayName} <span style="font-weight:normal;color:#888;font-size:10px;margin-left:6px;">🕒 ${dataFmt}</span></div><div style="color:var(--text-muted); font-size:11px; margin-top:2px;"> No Corte (34'): <b style="color:var(--bet-yellow)">${m.cCut} cantos</b> ${infoGols} | ${contextText}</div></div></div><a href="https://cornerprobet.com/analysis/${m.gameId}" target="_blank" class="btn btn-secondary" style="padding:4px 10px; font-size:10px;">Abrir ↗</a></li>`;
+    });
+    html += `</ul></div></div></div>`; document.body.insertAdjacentHTML('beforeend', html);
+}
+
+// ==========================================
+// RESTO DO CÓDIGO (COLETOR, PADRÕES, DADOS)
+// ==========================================
+function updateStrategyUI() {
+    const strat = document.getElementById('pStrategy').value;
+    const placarSel = document.getElementById('pContextoPlacar'); const lblPlacar = document.getElementById('lblContextoPlacar');
+    const targetSel = document.getElementById('pTarget2ndHalf'); const lblTarget = document.getElementById('lblTarget2ndHalf');
+    const cutSel = document.getElementById('pCornersAtCut'); const lblCut = document.getElementById('lblCornersAtCut');
+    const winRateInput = document.getElementById('pMinWinRate'); const lblWinRate = document.getElementById('lblMinWinRate');
+
+    placarSel.disabled = false; lblPlacar.style.color = 'var(--text-muted)';
+    targetSel.disabled = false; lblTarget.style.color = 'var(--text-muted)'; targetSel.style.color = 'var(--bet-green)';
+    cutSel.disabled = false; lblCut.style.color = 'var(--text-muted)';
+    lblWinRate.innerText = '🎯 Taxa Acerto Min (%)'; lblWinRate.style.color = '#fff'; winRateInput.style.borderColor = 'var(--bet-green)';
+
+    if (strat === 'fogo') {
+        placarSel.value = 'any'; placarSel.disabled = true; lblPlacar.innerText = '⏱️ Placar (Desativado)'; lblPlacar.style.color = '#555';
+        cutSel.value = 'any'; cutSel.disabled = true; lblCut.innerText = '🚩 Range no Corte (Desativado)'; lblCut.style.color = '#555';
+        lblTarget.innerText = '🔥 Linha de Explosão (2ºT)'; lblTarget.style.color = 'var(--bet-fire)'; targetSel.style.color = 'var(--bet-fire)';
+        winRateInput.style.borderColor = 'var(--bet-fire)';
+        if(targetSel.value < 6) targetSel.value = "7"; 
+    } else if (strat === '37ht') {
+        placarSel.value = 'any'; placarSel.disabled = true; lblPlacar.innerText = '⏱️ Placar (Desativado)'; lblPlacar.style.color = '#555';
+        targetSel.disabled = true; lblTarget.innerText = '⚽ Meta (Desativada)'; lblTarget.style.color = '#555'; targetSel.style.color = '#555';
+    } else if (strat.startsWith('g_')) {
+        targetSel.disabled = true; lblTarget.innerText = '⚽ Meta (Gols)'; lblTarget.style.color = '#555'; targetSel.style.color = '#555';
+        if(strat === 'g_05_00ht') { placarSel.value = 'any'; placarSel.disabled = true; lblPlacar.innerText = '⏱️ Placar (Fixo 0x0)'; lblPlacar.style.color = '#555'; }
+    } else {
+        lblPlacar.innerText = '⏱️ Placar no Corte'; lblTarget.innerText = '🎯 Meta a Bater'; lblCut.innerText = '🚩 Range no Corte (34\')';
+    }
+}
+
+function buscarPadroes() {
+    if (!allCollected || allCollected.length === 0) { alert("Sem dados na base."); return; }
+    const strategy = document.getElementById('pStrategy').value; let isFogo = (strategy === 'fogo'); let isGoals = strategy.startsWith('g_');
+    const target2ndHalf = parseInt(document.getElementById('pTarget2ndHalf').value); 
+    const cCutFilter = document.getElementById('pCornersAtCut').value; 
+    const minWinRate = parseFloat(document.getElementById('pMinWinRate').value) || 70;
+    const minGames = parseInt(document.getElementById('pMinGames').value) || 5;
+    const ctxPlacar = document.getElementById('pContextoPlacar').value; const ctxOdd = document.getElementById('pContextoOdd').value;
+
+    const presRanges = [ { lbl: ">= 45%", min: 45, max: 100 }, { lbl: ">= 50%", min: 50, max: 100 }, { lbl: ">= 55%", min: 55, max: 100 }, { lbl: ">= 60%", min: 60, max: 100 }, { lbl: "40% a 55%", min: 40, max: 55 }, { lbl: "50% a 70%", min: 50, max: 70 } ];
+    const f1Ranges = [ { lbl: ">= 38%", min: 38, max: 100 }, { lbl: ">= 40%", min: 40, max: 100 }, { lbl: ">= 42%", min: 42, max: 100 }, { lbl: ">= 45%", min: 45, max: 100 }, { lbl: "35% a 45%", min: 35, max: 45 } ];
+    const f2Ranges = [ { lbl: ">= 28%", min: 28, max: 100 }, { lbl: ">= 30%", min: 30, max: 100 }, { lbl: ">= 33%", min: 33, max: 100 }, { lbl: "25% a 35%", min: 25, max: 35 } ];
+    const permutations = [ { s1: 'esquerdo', s1Lbl: 'Esq', s2: 'centro', s2Lbl: 'Cen', s3: 'direito' }, { s1: 'esquerdo', s1Lbl: 'Esq', s2: 'direito', s2Lbl: 'Dir', s3: 'centro' }, { s1: 'centro', s1Lbl: 'Cen', s2: 'esquerdo', s2Lbl: 'Esq', s3: 'direito' }, { s1: 'centro', s1Lbl: 'Cen', s2: 'direito', s2Lbl: 'Dir', s3: 'esquerdo' }, { s1: 'direito', s1Lbl: 'Dir', s2: 'esquerdo', s2Lbl: 'Esq', s3: 'centro' }, { s1: 'direito', s1Lbl: 'Dir', s2: 'centro', s2Lbl: 'Cen', s3: 'esquerdo' } ];
+
+    let rawPatterns = [];
+    for (let perm of permutations) {
+        for (let p of presRanges) {
+            for (let f1 of f1Ranges) {
+                for (let f2 of f2Ranges) {
+                    let totalJogos = 0; let greens = 0; let matchesList = []; let sumAvg = 0;
+                    for (let r of allCollected) {
+                        let cutoffMin = r.heatmap.corteSeg ? Math.floor(r.heatmap.corteSeg / 60) : 34;
+                        let homeG = 0, awayG = 0;
+                        if (r.goals && Array.isArray(r.goals)) { homeG = r.goals.filter(g => g.minute <= cutoffMin && g.team === 'home').length; awayG = r.goals.filter(g => g.minute <= cutoffMin && g.team === 'away').length;
+                        } else if (r.htScore && r.htScore.includes('-')) { let pts = r.htScore.split('-'); homeG = parseInt(pts[0]); awayG = parseInt(pts[1]); }
+                        
+                        let ftPts = r.score ? r.score.split('-') : [0,0];
+                        let ftGoals = (parseInt(ftPts[0])||0) + (parseInt(ftPts[1])||0);
+
+                        let passContext = true;
+                        
+                        if (strategy === 'g_05_00ht' && (homeG + awayG !== 0)) passContext = false; // Exige 0x0
+                        else if (!isFogo && !isGoals && ctxPlacar !== 'any') { if (ctxPlacar === 'empate' && homeG !== awayG) passContext = false; else if (ctxPlacar === 'casa_empatando_perdendo' && homeG > awayG) passContext = false; else if (ctxPlacar === 'visit_empatando_perdendo' && awayG > homeG) passContext = false; }
+                        
+                        if (passContext && ctxOdd !== 'any') { let oH = parseFloat(r.oddHome) || 0, oA = parseFloat(r.oddAway) || 0; if (oH === 0 || oA === 0) passContext = false; else { if (ctxOdd === 'casa_fav' && oH > 1.80) passContext = false; else if (ctxOdd === 'visit_fav' && oA > 1.80) passContext = false; else if (ctxOdd === 'casa_zebra' && oH < 3.00) passContext = false; } }
+                        
+                        if (!passContext) continue; 
+                        let v1 = r.heatmap[perm.s1], v2 = r.heatmap[perm.s2], v3 = r.heatmap[perm.s3];
+                        if (v1 >= v2 && v2 >= v3 && r.heatmap.presenca >= p.min && r.heatmap.presenca <= p.max && v1 >= f1.min && v1 <= f1.max && v2 >= f2.min && v2 <= f2.max) {
+                            let cornersAtCut = 0, cHT = 0, cFT = 0;
+                            if (strategy === 'home') { cHT = r.corners.htHome; cFT = r.corners.ftHome; cornersAtCut = r.corners.events ? r.corners.events.filter(c => c.team === 'home' && c.min <= cutoffMin).length : cHT; } 
+                            else if (strategy === 'away') { cHT = r.corners.htAway; cFT = r.corners.ftAway; cornersAtCut = r.corners.events ? r.corners.events.filter(c => c.team === 'away' && c.min <= cutoffMin).length : cHT; } 
+                            else { cHT = r.corners.ht; cFT = r.corners.ft; cornersAtCut = r.corners.events ? r.corners.events.filter(c => c.min <= cutoffMin).length : cHT; }
+
+                            if (!isFogo && cCutFilter !== 'any') { let rng = cCutFilter.split('-'); if (cornersAtCut < parseInt(rng[0]) || cornersAtCut > parseInt(rng[1])) continue; }
+                            
+                            totalJogos++; let isGreen = false; let corners2ndHalf = cFT - cHT; 
+                            
+                            if (strategy === '37ht') { if (r.cornerIntervals && r.cornerIntervals['37-HT'] && r.cornerIntervals['37-HT'].t >= 1) isGreen = true; } 
+                            else if (strategy === 'g_05_00ht') { isGreen = (ftGoals >= 1); }
+                            else if (strategy === 'g_15') { isGreen = (ftGoals >= 2); }
+                            else { if (corners2ndHalf >= target2ndHalf) isGreen = true; }
+                            
+                            if (isGreen) greens++;
+                            sumAvg += isGoals ? ftGoals : corners2ndHalf;
+
+                            matchesList.push({ id: r.gameId, date: r.date, title: `${r.homeName} vs ${r.awayName}`, league: r.league, home: r.homeName, away: r.awayName, pres: r.heatmap.presenca, f1Lado: perm.s1Lbl, f1Val: v1, f2Lado: perm.s2Lbl, f2Val: v2, cCut: cornersAtCut, scoreAtCut: `${homeG}x${awayG}`, ftScore: r.score||'0-0', cHT: cHT, c2nd: corners2ndHalf, cFT: cFT, green: isGreen });
+                        }
+                    }
+                    if (totalJogos >= minGames) { 
+                        let wr = (greens / totalJogos) * 100; 
+                        if (wr >= minWinRate) {
+                            matchesList.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+                            let curStreak = 0; let sType = true;
+                            if(matchesList.length > 0) {
+                                sType = matchesList[0].green;
+                                for(let m of matchesList) { if(m.green === sType) curStreak++; else break; }
+                            }
+                            let streakBadge = sType ? `<span class="badge bg-green" style="font-size:11px;">W${curStreak}</span>` : `<span class="badge bg-red" style="font-size:11px;">L${curStreak}</span>`;
+                            rawPatterns.push({ s1Lbl: perm.s1Lbl, s2Lbl: perm.s2Lbl, f1Lbl: f1.lbl, f2Lbl: f2.lbl, pLbl: p.lbl, total: totalJogos, greens: greens, wr: wr, avg2nd: sumAvg / totalJogos, matches: matchesList, streakBadge: streakBadge }); 
+                        }
+                    }
+                }
+            }
+        }
+    }
+    rawPatterns.sort((a, b) => b.wr !== a.wr ? b.wr - a.wr : b.total - a.total);
+    let finalPatterns = [];
+    for (let candidate of rawPatterns) {
+        let isRedundant = false; let candidateIds = new Set(candidate.matches.map(m => m.id));
+        for (let acc of finalPatterns) { let s = 0; for (let m of acc.matches) if (candidateIds.has(m.id)) s++; if (s / (candidate.total + acc.total - s) >= 0.80) { isRedundant = true; break; } }
+        if (!isRedundant) finalPatterns.push(candidate);
+    }
+    window.lastFoundPatterns = finalPatterns; renderPatternsTable(finalPatterns, target2ndHalf, strategy);
+}
+
+function renderPatternsTable(patterns, target2ndHalf, strategy) {
+    document.getElementById('pResults').style.display = 'block'; const thead = document.querySelector('#pTable thead tr');
+    let isFogo = (strategy === 'fogo'); let isGoals = strategy.startsWith('g_');
+    
+    let headerGreen = strategy === '37ht' ? 'Greens &#10004;' : `Greens (+${target2ndHalf}) &#10004;`; 
+    if(isFogo) headerGreen = `Explosão (+${target2ndHalf}) &#128293;`;
+    if(isGoals) headerGreen = `Greens (Gols) &#10004;`;
+
+    let avgLabel = isGoals ? 'Média Gols (FT)' : 'Média Cantos (+)';
+
+    thead.innerHTML = `<th>Flanco 1</th><th>Flanco 2</th><th>Presença</th><th style="text-align:center;">Qtd Jogos</th><th id="pColGreen" style="text-align:center;color:${isFogo?'var(--bet-fire)':'var(--bet-green)'};">${headerGreen}</th><th style="text-align:center;">WinRate</th><th style="text-align:center;">Streak</th><th style="text-align:center;">${avgLabel}</th><th style="text-align:center;">Ação</th>`;
+    document.getElementById('pResultsTitle').innerHTML = isFogo ? `&#128293; Laboratório Explosivo (${patterns.length})` : `&#127942; Lógica Encontrada (${patterns.length})`;
+    const tbody = document.querySelector('#pTable tbody');
+    if (patterns.length === 0) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:40px;">❌ Nenhum padrão sobreviveu aos filtros.</td></tr>`; return; }
+    let html = '';
+    patterns.forEach((p, index) => {
+        let wrColor = p.wr >= 80 ? 'var(--bet-green)' : (p.wr >= 70 ? 'var(--bet-yellow)' : 'var(--danger)'); let isFire = p.avg2nd >= 6.5 && !isGoals; let avgColor = isFire ? 'var(--bet-fire)' : 'var(--text-main)';
+        html += `<tr><td style="font-weight:700;"><span class="badge" style="background:#444;">${p.s1Lbl}</span> ${p.f1Lbl}</td><td style="font-weight:700;"><span class="badge" style="background:#444;">${p.s2Lbl}</span> ${p.f2Lbl}</td><td style="font-weight:800;">${p.pLbl}</td><td style="text-align:center; font-weight:700;">${p.total}</td><td style="text-align:center;color:${isFogo?'var(--bet-fire)':'var(--bet-green)'};font-weight:900;">${p.greens}</td><td style="text-align:center;color:${wrColor};font-weight:900;">${p.wr.toFixed(1)}%</td><td style="text-align:center;">${p.streakBadge}</td><td style="text-align:center;color:${avgColor};font-weight:${isFire?'900':'700'};">${isGoals?'':'+'}${p.avg2nd.toFixed(1)}${isFire?' &#128293;':''}</td><td style="text-align:center;"><button class="btn btn-secondary" style="padding:6px 12px; font-size:10px;" onclick="showPatternGames(${index}, '${strategy}')">🔎 Histórico</button></td></tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+function showPatternGames(index, strategy) {
+    if (!window.lastFoundPatterns) return; const p = window.lastFoundPatterns[index]; if (!p) return;
+    let isFogo = (strategy === 'fogo'); let isGoals = strategy.startsWith('g_');
+    let avgLabel = isGoals ? `Média Gols FT: ${p.avg2nd.toFixed(1)}` : `Média 2ºT: +${p.avg2nd.toFixed(1)}`;
+    
+    let html = `<div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; justify-content:center; align-items:center; padding:20px;" id="pModal"><div style="background:var(--bg-card); border-radius:12px; width:100%; max-width:800px; max-height:85vh; display:flex; flex-direction:column;"><div style="padding:15px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;"><h3 style="margin:0; color:#fff; font-size:14px;">📋 Histórico (${p.total} Jogos) | ${avgLabel}</h3><button onclick="document.getElementById('pModal').remove()" style="background:transparent; border:none; color:#fff; font-size:24px; cursor:pointer;">&times;</button></div><div style="padding:15px 20px; overflow-y:auto; flex:1;"><ul style="list-style:none; padding:0; margin:0; font-size:12px;">`;
+    p.matches.forEach(m => {
+        let badge = m.green ? `<span class="badge bg-green">GREEN</span>` : `<span class="badge bg-red">RED</span>`; let corMeta = m.green ? (isFogo ? 'var(--bet-fire)' : 'var(--bet-green)') : 'var(--danger)';
+        let contextText = "";
+        
+        if (isGoals) {
+            contextText = `HT: <b style="color:#fff">${m.scoreAtCut}</b> &#10145;&#65039; FT: <b style="color:${corMeta};">${m.ftScore}</b>`;
+        } else if (strategy === '37ht') {
+            contextText = m.green ? `<b style="color:var(--bet-green);">SAIU CANTO LIMITE!</b>` : `<b style="color:var(--danger);">NÃO SAIU</b>`;
+        } else {
+            contextText = `HT: <b style="color:#fff">${m.cHT}</b> &#10145;&#65039; 2ºT: <b style="color:${corMeta};">+${m.c2nd}</b>`;
+        }
+
+        let placarInfo = (strategy === '37ht' || isFogo || isGoals) ? '' : ` | Placar: <b style="color:#fff">${m.scoreAtCut}</b>`;
+        let dataFmt = m.date ? m.date.substring(0, 16) : '';
+        html += `<li style="padding:10px 0; border-bottom:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between;"><div style="display:flex; align-items:center; flex:1;"><div style="min-width:55px;">${badge}</div> <div style="margin-left:12px; width:100%;"><div style="font-weight:700; color:#fff; font-size:12px;">${m.title} <span style="font-weight:normal;color:#888;font-size:10px;margin-left:6px;">🕒 ${dataFmt}</span></div><div style="color:var(--text-muted); font-size:11px; margin-top:2px;">Corte: <b style="color:var(--bet-yellow)">${m.cCut} c.</b>${placarInfo} | ${contextText}</div></div></div><a href="https://cornerprobet.com/analysis/${m.id}" target="_blank" class="btn btn-secondary" style="padding:4px 10px; font-size:10px;">Abrir ↗</a></li>`;
+    });
+    html += `</ul></div></div></div>`; document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function mostrarRankingPadroes() {
+    if (!window.lastFoundPatterns || window.lastFoundPatterns.length === 0) return;
+    let ligasMap = {}; let timesMap = {}; let jogosUnicos = new Map();
+    window.lastFoundPatterns.forEach(p => { p.matches.forEach(m => { if (!jogosUnicos.has(m.id)) jogosUnicos.set(m.id, m); }); });
+    jogosUnicos.forEach(m => { let l = m.league || "N/A"; if(!ligasMap[l]) ligasMap[l] = {nome: l, total: 0, greens: 0}; ligasMap[l].total++; if(m.green) ligasMap[l].greens++; [m.home, m.away].forEach(t => { if(t) { if(!timesMap[t]) timesMap[t] = {nome: t, total: 0, greens: 0}; timesMap[t].total++; if(m.green) timesMap[t].greens++; } }); });
+    let rankLigas = Object.values(ligasMap).map(x => ({...x, wr: (x.greens/x.total)*100})).filter(x => x.greens > 0).sort((a,b) => b.greens !== a.greens ? b.greens - a.greens : b.wr - a.wr);
+    let rankTimes = Object.values(timesMap).map(x => ({...x, wr: (x.greens/x.total)*100})).filter(x => x.greens > 0).sort((a,b) => b.greens !== a.greens ? b.greens - a.greens : b.wr - a.wr);
+    let html = `<div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; justify-content:center; align-items:center; padding:20px;" id="rRankModal"><div style="background:var(--bg-card); border-radius:12px; width:100%; max-width:850px; max-height:90vh; display:flex; flex-direction:column;"><div style="padding:15px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;"><h3 style="margin:0; font-size:16px; color:var(--bet-yellow);">📊 Melhores Times/Ligas</h3><button onclick="document.getElementById('rRankModal').remove()" style="background:transparent; border:none; color:#fff; font-size:24px; cursor:pointer;">&times;</button></div><div style="padding:20px; overflow-y:auto; flex:1; display:grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap:20px;"><div><h4 style="color:var(--bet-green); margin-bottom:10px; font-size:13px;">🌍 Ligas</h4><div class="table-container" style="max-height:400px;"><table class="data-table"><thead><tr><th>Liga</th><th style="text-align:center;">Jogos</th><th style="text-align:center;">Greens</th><th style="text-align:center;">% Acerto</th></tr></thead><tbody>`;
+    rankLigas.forEach(r => { let c = r.wr >= 80 ? 'var(--bet-green)' : (r.wr >= 60 ? 'var(--bet-yellow)' : 'var(--danger)'); html += `<tr><td style="font-weight:700;">${r.nome}</td><td style="text-align:center;">${r.total}</td><td style="text-align:center;color:var(--bet-green);">${r.greens}</td><td style="text-align:center;color:${c};font-weight:bold;">${r.wr.toFixed(0)}%</td></tr>`; });
+    html += `</tbody></table></div></div><div><h4 style="color:#3b82f6; margin-bottom:10px; font-size:13px;">⚽ Times</h4><div class="table-container" style="max-height:400px;"><table class="data-table"><thead><tr><th>Equipe</th><th style="text-align:center;">Jogos</th><th style="text-align:center;">Greens</th><th style="text-align:center;">% Acerto</th></tr></thead><tbody>`;
+    rankTimes.forEach(r => { let c = r.wr >= 80 ? 'var(--bet-green)' : (r.wr >= 60 ? 'var(--bet-yellow)' : 'var(--danger)'); html += `<tr><td style="font-weight:700;">${r.nome}</td><td style="text-align:center;">${r.total}</td><td style="text-align:center;color:var(--bet-green);">${r.greens}</td><td style="text-align:center;color:${c};font-weight:bold;">${r.wr.toFixed(0)}%</td></tr>`; });
+    html += `</tbody></table></div></div></div></div></div>`; document.body.insertAdjacentHTML('beforeend', html);
+}
+
+const PRES_X=0.50,FLNC_X=0.50,ESQ_Y=0.33,DIR_Y=0.66,CORTE_TARGET_SEG=34*60+48; let isCollecting=false; let collectStats={dias:0,totalJogos:0,coletados:0,semDados:0,skipped:0};
+function toSeg(t){if(typeof t!=='string')return NaN;const p=t.split(':');return p.length===2?parseInt(p[0])*60+parseInt(p[1]):NaN;}
+function getToken(){return document.getElementById('cTokenInput').value.trim();}
+function calcHeatmap(ballcoordinates, corteConfig) {
+    if(!ballcoordinates || !ballcoordinates.length) return null; const cfg=corteConfig||{target:CORTE_TARGET_SEG}; const coords=ballcoordinates.map(c=>({_s:toSeg(c.t),_x:parseFloat(c.x),_y:parseFloat(c.y)})).filter(c=>!isNaN(c._s)).sort((a,b)=>a._s-b._s);
+    let coordsValidas=coords.filter(c=>c._s<=cfg.target); if(coordsValidas.length<20&&coords.length>0) coordsValidas=coords.slice(0,Math.min(coords.length,150)); if(coordsValidas.length===0) return null;
+    const corteSeg=coordsValidas[coordsValidas.length-1]._s; let total=0,atk=0,esq=0,cen=0,dir=0,fl=0;
+    for(let i=0;i<coordsValidas.length;i++){ total++; if(coordsValidas[i]._x>=PRES_X) atk++; if(coordsValidas[i]._x>=FLNC_X){ fl++; if(coordsValidas[i]._y<=ESQ_Y)esq++; else if(coordsValidas[i]._y>=DIR_Y)dir++; else cen++; } }
+    if(total===0)return null; return{corteSeg,total,atk,fl,esq,cen,dir,pres:Math.round((atk/total)*100),pE:fl>0?Math.round((esq/fl)*100):0,pC:fl>0?Math.round((cen/fl)*100):0,pD:fl>0?Math.round((dir/fl)*100):0};
+}
+function extractCorners(game) {
+    let corners=[];
+    if(game.timeline&&Array.isArray(game.timeline)) game.timeline.filter(e=>e.type==='corner').forEach(e=>corners.push({minute:e.minute,team:e.participant_id===(game.homeId||'')?'home':'away'}));
+    if(corners.length===0&&game.eventsClean) game.eventsClean.filter(e=>e.tp==='c'||e.tp==='corner').forEach(e=>corners.push({minute:parseInt(e.t)||0,team:e.h==='h'?'home':'away'}));
+    if(corners.length===0&&game.mcorners&&game.mcorners.data) game.mcorners.data.filter(e=>e.type==='corner').forEach(e=>corners.push({minute:e.minute,team:(e.participant_id||e.team_id)===(game.homeId||'')?'home':'away'}));
+    corners.sort((a,b)=>(a.minute||0)-(b.minute||0)); let ht=corners.filter(c=>(c.minute||0)<=45).length,ft=corners.length; return {corners,ht,ft,events:corners.map(c=>({min:c.minute,team:c.team}))};
+}
+async function fetchMatchday(token,dayOffset){ try{const res=await fetch('https://cornerprobet.com/api/v3/getMatchday.php?token='+encodeURIComponent(token),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({day:dayOffset.toString(),token:null})}); if(!res.ok)return[]; const data=await res.json(); const td=new Date(); td.setDate(td.getDate()+dayOffset); const dp=`-${String(td.getMonth()+1).padStart(2,'0')}-${String(td.getDate()).padStart(2,'0')}`; let games=[]; (data.data||[]).forEach(l=>{(l.games||[]).forEach(g=>{if(!g.game_date||g.game_date.indexOf(dp)>=0){g._league_name=l.league_name||'Liga'; games.push(g);}});}); return games; }catch(e){return[];} }
+async function fetchGameData(token,gameId){ try{const res=await fetch(`https://cornerprobet.com/api/v3/getAnalysis.php?gameId=${encodeURIComponent(gameId)}&token=${encodeURIComponent(token)}`); if(!res.ok)return null; const data=await res.json(); return (data&&data.game)?data:null; }catch(e){return null;} }
+async function startColetor(){
+    const token=getToken(); if(!token){alert('Token não encontrado!');return;} const dias=parseInt(document.getElementById('cDiasSelect').value), parallel=parseInt(document.getElementById('cParallelSelect').value);
+    document.getElementById('btnStartColetor').style.display='none'; document.getElementById('btnStopColetor').style.display='block'; document.getElementById('btnStopColetor').innerText='⏹ Pausar'; document.getElementById('btnStopColetor').disabled=false;
+    document.getElementById('cProgressContainer').style.display='block'; document.getElementById('cSummaryContainer').style.display='block'; document.getElementById('cLogContainer').style.display='block'; document.getElementById('cLog').innerHTML='';
+    isCollecting=true; collectStats={dias:0,totalJogos:0,coletados:0,semDados:0,skipped:0}; updateCollectSummary(); document.getElementById('cStatus').className='status-bar loading'; document.getElementById('cStatus').innerHTML='⏳ Localizando...';
+    let allGames=[]; for(let d=1;d<=dias&&isCollecting;d++){ addLog(`📅 Lendo dia ${d}...`); const games=await fetchMatchday(token,-d); allGames.push(...games.filter(g=>[2,3,4,8].includes(g.status))); collectStats.dias=d; collectStats.totalJogos=allGames.length; updateCollectSummary(); }
+    if(!isCollecting){finishColetor(false);return;} if(allGames.length===0){document.getElementById('cStatus').className='status-bar error'; document.getElementById('cStatus').innerHTML='❌ Nenhum jogo'; finishColetor(true);return;}
+    let total=allGames.length,processed=0,queue=[]; const existingIds=new Set(allCollected.map(x=>String(x.gameId))); allGames.forEach(gi=>{if(existingIds.has(String(gi.id||gi.game_id))){collectStats.skipped++;processed++;}else{queue.push(gi);}});
+    if(queue.length===0){addLog(`✅ Todos os jogos já estavam na base.`);finishColetor(true);return;}
+    document.getElementById('cStatus').innerHTML=`⏳ Baixando ${queue.length} jogos...`;
+    async function processGame(gi){
+        if(!isCollecting)return; const gid=gi.id||gi.game_id;
+        try{
+            const data=await fetchGameData(token,gid); if(!data||!data.game||!data.game.ballcoordinates||!data.game.ballcoordinates.length){collectStats.semDados++;return;}
+            const g=data.game,heatmap=calcHeatmap(g.ballcoordinates,{target:toSeg(document.getElementById('cCorteInput').value)||CORTE_TARGET_SEG}); if(!heatmap){collectStats.semDados++;return;}
+            const ci=extractCorners(g);
+            allCollected.push({gameId:gid,date:g.date||gi.game_date||'',league:gi._league_name||g.leagueName||'',homeName:g.homeName||gi.home_name||'',awayName:g.awayName||gi.away_name||'',score:g.score||g.scores?.ft_score||gi.goals||'',htScore:g.scores?.ht_score||'',oddHome:(g.initOdds&&g.initOdds[0]?parseFloat(g.initOdds[0]).toFixed(2):'-'),oddAway:(g.initOdds&&g.initOdds[2]?parseFloat(g.initOdds[2]).toFixed(2):'-'),heatmap:{corteSeg:heatmap.corteSeg,presenca:heatmap.pres,esquerdo:heatmap.pE,centro:heatmap.pC,direito:heatmap.pD},corners:{ht:ci.ht,ft:ci.ft,events:ci.events},cornerIntervals:g.cornerIntervals||null});
+            collectStats.coletados++; addLog(`✅ ${gid} salvo.`); updateCollectSummary();
+        }catch(e){collectStats.semDados++;}
+    }
+    const delayMs=parseInt(document.getElementById('cDelaySelect').value)||1500; const workers=[];
+    for(let i=0;i<parallel;i++){ workers.push((async()=>{ await new Promise(r=>setTimeout(r,i*(delayMs/parallel))); while(queue.length>0&&isCollecting){ await processGame(queue.shift()); processed++; document.getElementById('cProgress').max=total; document.getElementById('cProgress').value=processed; document.getElementById('cProgressText').innerText=`${processed}/${total}`; if(queue.length>0&&isCollecting)await new Promise(r=>setTimeout(r,delayMs)); } })()); }
+    await Promise.all(workers); finishColetor(isCollecting);
+}
+function stopColetor(){isCollecting=false; document.getElementById('btnStopColetor').innerText='⏳ Parando...'; document.getElementById('btnStopColetor').disabled=true;}
+function finishColetor(completed){
+    isCollecting=false; document.getElementById('btnStartColetor').style.display='block'; document.getElementById('btnStartColetor').innerText=completed?'🔄 Nova Coleta':'▶️ Retomar'; document.getElementById('btnStopColetor').style.display='none';
+    document.getElementById('cStatus').className='status-bar '+(completed?'ok':'paused'); document.getElementById('cStatus').innerHTML=completed?`✅ Base alimentada com ${collectStats.coletados} novos jogos!`:'⏸ Pausado.'; renderDadosView();
+}
+function updateCollectSummary(){['cSTotalDias','cSTotalJogos','cSColetados','cSSemDados','cSSkipped'].forEach((id,i)=>document.getElementById(id).textContent=Object.values(collectStats)[i]);}
+function addLog(msg){const el=document.getElementById('cLog'),line=document.createElement('div');line.textContent=msg;el.appendChild(line);while(el.children.length>60)el.removeChild(el.firstChild);el.scrollTop=el.scrollHeight;}
+function limparDados(){if(!confirm('Apagar TUDO da memória?'))return; allCollected=[]; renderDadosView();}
+function downloadJSON(){if(!allCollected.length)return; const blob=new Blob([JSON.stringify(allCollected,null,2)],{type:'application/json'}),a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`cornerpro_base.json`; a.click();}
+function downloadCSV() {
+    if (!allCollected.length) return;
+    const rows = [['Data','Liga','Home','Away','Score','Presenca_%','Esq_%','Cen_%','Dir_%','C_HT','C_FT'].join(';')];
+    allCollected.forEach(r => rows.push([`"${r.date}"`, `"${r.league}"`, `"${r.homeName}"`, `"${r.awayName}"`, `"${r.score}"`, r.heatmap.presenca, r.heatmap.esquerdo, r.heatmap.centro, r.heatmap.direito, r.corners.ht, r.corners.ft].join(';')));
+    const blob = new Blob(['\uFEFF' + rows.join('\n')], { type: 'text/csv;charset=utf-8;' }), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `cornerpro.csv`; a.click();
+}
+function renderDadosView() {
+    const n = allCollected.length; document.getElementById('dTotal').textContent = n; document.getElementById('navBadgeCount').textContent = n;
+    if (n === 0) { document.getElementById('dSummaryRow').style.display = 'none'; document.getElementById('dTableCard').style.display = 'none'; return; }
+    document.getElementById('dSummaryRow').style.display = 'grid'; document.getElementById('dTableCard').style.display = 'block';
+    let sumPres = 0, sumE = 0, sumD = 0; allCollected.forEach(r => { sumPres += r.heatmap.presenca; sumE += r.heatmap.esquerdo; sumD += r.heatmap.direito; });
+    document.getElementById('dAvgPres').textContent = (sumPres / n).toFixed(1) + '%'; document.getElementById('dAvgEsq').textContent = (sumE / n).toFixed(1) + '%'; document.getElementById('dAvgDir').textContent = (sumD / n).toFixed(1) + '%';
+    let html = ''; allCollected.slice(-50).reverse().forEach(r => { html += `<tr><td style="font-size:10px;color:var(--text-muted);">${(r.date || '').substring(0, 16)}</td><td><div style="font-weight:700;">${r.homeName} <span style="font-size:9px;color:#777;">vs</span> ${r.awayName}</div></td><td style="text-align:center;font-weight:800;">${r.score || '-'}</td><td style="text-align:center;"><span class="badge bg-yellow">${r.heatmap.presenca}%</span></td><td><div class="flank-mini"><div class="fm-esq" style="width:${Math.max(r.heatmap.esquerdo, 12)}%">${r.heatmap.esquerdo}%</div><div class="fm-cen" style="width:${Math.max(r.heatmap.centro, 12)}%">${r.heatmap.centro}%</div><div class="fm-dir" style="width:${Math.max(r.heatmap.direito, 12)}%">${r.heatmap.direito}%</div></div></td><td style="text-align:center;font-weight:800;">${r.corners.ht}</td><td style="text-align:center;font-weight:800;color:var(--bet-green);">${r.corners.ft}</td></tr>`; });
+    document.querySelector('#dTable tbody').innerHTML = html;
+}
+window.onload=function(){switchView('simulador'); updateStrategyUI();}; 
+</script>
+</body>
+</html>
