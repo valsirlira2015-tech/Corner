@@ -203,8 +203,8 @@ function gameLink(id){return AURL+id}
 function switchTab(id,el){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active')});el.classList.add('active');document.getElementById('tab-'+id).classList.add('active')}
 function mkBtns(el,vals,cur,cb){vals.forEach(function(n){var b=document.createElement('div');b.className='sbtn'+(n===cur?' on':'');b.textContent=n;b.onclick=function(){cb(n);el.querySelectorAll('.sbtn').forEach(function(x){x.classList.remove('on')});b.classList.add('on')};el.appendChild(b)})}
 
-mkBtns(document.getElementById('gRow'),[10,15,20,25,30,40,50],10,'ctxGames');
-mkBtns(document.getElementById('dashGRow'),[10,15,20,25,30,40,50],20,'dashGames');
+mkBtns(document.getElementById('gRow'),[10,15,20,25,30,40,50],10,function(n){sG=n});
+mkBtns(document.getElementById('dashGRow'),[10,15,20,25,30,40,50],20,function(n){dashGames=n});
 mkBtns(document.getElementById('smartGRow'),[15,20,25,30,40,50],30,function(n){smartGames=n});
 mkBtns(document.getElementById('smartMinRow'),[50,60,65,70,75,80],60,function(n){smartMin=n});
 mkBtns(document.getElementById('smartBaseRow'),[5,8,10,15,20],8,function(n){smartBase=n});
