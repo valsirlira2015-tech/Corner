@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagnóstico Avançado – MacBook M1 / USB-C</title>
+  <style>
+    :root {
+      --bg: #0b0d12; --card: #15181e; --accent: #00e5ff; --accent-dim: #00a3b8;
+      --success: #00e676; --fail: #ff5252; --text: #e0e0e0; --text-muted: #8a8f99;
+      --border: #252933; --radius: 10px; --shadow: 0 6px 20px rgba(0,0,0,0.6);
+      --font-mono: 'Consolas', 'Monaco', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 12px; display: flex; justify-content: center; }
+    #app { width: 100%; max-width: 1000px; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    
+    header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; background: #111319; }
+    header h1 { font-size: 1.1rem; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+    .tabs { display: flex; gap: 5px; flex-wrap: wrap; }
+    .tab { padding: 7px 11px; background: #1a1d25; border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; cursor: pointer; font-size: 0.82rem; transition: 0.2s; white-space: nowrap; }
+    .tab:hover { border-color: var(--accent-dim); }
+    .tab.active { background: var(--accent-dim); color: #000; border-color: var(--accent); font-weight: 600; }
+
+    main { padding: 16px; min-height: 440px; }
+    .progress-bar { width: 100%; height: 5px; background: var(--border); border-radius: 3px; margin-bottom: 14px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s ease; }
+
+    .card { background: #1c1f28; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 14px; opacity: 0; transform: translateY(8px); animation: fadeUp 0.35s ease forwards; }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    .card h3 { color: var(--accent); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; font-size: 1rem; }
+    .card p, .card li, .card td { font-size: 0.88rem; line-height: 1.5; }
+    .card ul { padding-left: 16px; margin: 8px 0; }
+    .tag { background: #252a35; padding: 2px 7px; border-radius: 4px; font-size: 0.75rem; font-family: var(--font-mono); color: var(--accent); display: inline-block; margin: 2px 0; }
+    .tag.warn { color: #ffb74d; background: #332815; }
+    .tag.err { color: var(--fail); background: #2a1515; }
+    .tag.ok { color: var(--success); background: #0d2618; }
+
+    .btn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; margin-top: 10px; }
+    .btn { padding: 10px; border: 1px solid var(--border); background: #222630; color: var(--text); border-radius: 7px; cursor: pointer; transition: 0.2s; font-weight: 500; font-size: 0.88rem; }
+    .btn:hover { transform: translateY(-2px); border-color: var(--accent); background: #2a2f3c; }
+    .btn.primary { background: var(--accent-dim); color: #000; border-color: var(--accent); }
+    .btn.primary:hover { background: var(--accent); }
+    .btn.success { background: rgba(0,230,118,0.15); border-color: var(--success); color: var(--success); }
+    .btn.fail { background: rgba(255,82,82,0.15); border-color: var(--fail); color: var(--fail); }
+    .actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; justify-content: flex-end; }
+
+    table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.84rem; }
+    th, td { padding: 7px 9px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { background: #1e222b; color: var(--accent); font-weight: 600; position: sticky; top: 0; }
+    tr:nth-child(even) td { background: #191c24; }
+
+    .ref-card { margin-bottom: 12px; }
+    .ref-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 10px 0; border-bottom: 1px dashed var(--border); }
+    .ref-content { display: none; padding-top: 10px; }
+    .ref-card.open .ref-content { display: block; animation: fadeUp 0.3s ease; }
+    
+    .scope-wave { background: #111; border: 1px solid #333; padding: 8px; font-family: var(--font-mono); font-size: 0.8rem; margin: 6px 0; border-radius: 5px; line-height: 1.4; }
+    .scope-wave::before { content: "📈 "; }
+
+    .seq-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; max-height: 500px; overflow-y: auto; padding-right: 5px; }
+    .seq-step { background: #1a1d25; border: 1px solid var(--border); border-radius: 8px; padding: 10px; cursor: pointer; transition: 0.2s; }
+    .seq-step:hover, .seq-step.active { border-color: var(--accent); background: #222630; }
+    .seq-step h4 { font-size: 0.9rem; color: var(--accent); margin-bottom: 4px; }
+    .seq-step p { font-size: 0.82rem; color: var(--text-muted); }
+
+    .conclusion { text-align: center; padding: 16px 0; }
+    .conclusion h2 { color: var(--accent); margin-bottom: 10px; }
+    @media (max-width: 650px) { .btn-grid { grid-template-columns: 1fr; } header { flex-direction: column; align-items: flex-start; } .seq-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>🔍 MacBook M1 / USB-C – Bancada Tech</h1>
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('diag')">🧪 Diagnóstico</div>
+        <div class="tab" onclick="switchTab('seq')">🗺️ Sequência 1-27</div>
+        <div class="tab" onclick="switchTab('ref')">📖 Straps & I2C</div>
+        <div class="tab" onclick="switchTab('scope')">📈 Osciloscópio</div>
+        <div class="tab" onclick="switchTab('power')">⚡ Estados</div>
+      </div>
+    </header>
+    <main id="content">
+      <div class="progress-bar" id="progBar"><div class="progress-fill" id="progFill"></div></div>
+      <div id="screen"></div>
+    </main>
+  </div>
+
+<script>
+  // Estado Global
+  const state = { tab: 'diag', symptom: null, stepIdx: 0, history: [], failedAt: null, seqActive: 1 };
+  const progFill = document.getElementById('progFill');
+  const screen = document.getElementById('screen');
+
+  // Dados de Diagnóstico
+  const flows = {
+    nao_liga: {
+      title: "🔌 Não liga / Sem resposta ao carregador",
+      steps: [
+        { id:"s1", title:"1. Entrada USB-C & CD3217", desc:"5V chega ao controlador e gera LDOs base.", measurements:[{rail:"PPVBUS_USBC0", exp:"5V±0.3V"},{rail:"PP3V3_UPC0_LDO", exp:"3.3V"},{rail:"PP1V5_UPC0_LDO_CORE", exp:"1.5V"}], question:"LDOs do CD3217 presentes?", next:"s2", fail:"cd3217_fault" },
+        { id:"s2", title:"2. Charger ISL9240 & Boost", desc:"Gera barramento principal de distribuição.", measurements:[{rail:"PPDCIN_USBC_AON", exp:"5V"},{rail:"PPVBAT_AON_CHGR_REG", exp:"12.3V"}], question:"Boost de 12.3V ativo?", next:"s3", fail:"charger_fault" },
+        { id:"s3", title:"3. Enable AON & PMIC 3.8V", desc:"Sinal lógico habilita buck síncrono.", measurements:[{rail:"P3V8AON_PWR_EN", exp:"3.8V"},{rail:"PP3V8_AON", exp:"3.8V"}], question:"PP3V8_AON estável?", next:"s4", fail:"aon_pmic_fault" },
+        { id:"s4", title:"4. MPMU/SPMU & Rails M1", desc:"U8100/U7700 iniciam via SPMI.", measurements:[{rail:"PP1V8_S2", exp:"1.8V"},{rail:"PPVDD_SOC_S1", exp:"0.8~1.0V"},{rail:"PP2V5_AWAKE_NAND", exp:"2.5V"}], question:"Rails críticos presentes?", next:"conclusion_ok", fail:"pmic_soc_fault" }
+      ]
+    },
+    preso_5v: {
+      title: "🔄 Preso em 5V / CD3217 reiniciando",
+      steps: [
+        { id:"u1", title:"1. Resistor Oscilador (15k 0.1%)", desc:"Pino 112(M21). Sem ele, CI inoperante.", question:"Resistor intacto e no valor correto?", next:"u2", fail:"osc_r_fault" },
+        { id:"u2", title:"2. Endereçamento I²C & Straps", desc:"Pinos CNFG (8,19,111) definem endereço.", question:"Straps configurados conforme slot?", next:"u3", fail:"i2c_addr_fault" },
+        { id:"u3", title:"3. Leitura EEPROM (SPI CS_L)", desc:"Pino 1. Pulsos = OK. Reta/ruído = falha.", question:"Sinal de leitura ativo?", next:"u4", fail:"eeprom_fault" },
+        { id:"u4", title:"4. UART Master/Slave", desc:"Comunicação interna de firmware.", question:"Handshake concluído?", next:"u5", fail:"uart_fw_fault" },
+        { id:"u5", title:"5. Pull-ups I²C CNFG", desc:"~3.3V em repouso. Pull-down = erro.", question:"Pull-ups presentes?", next:"conclusion_usbc_ok", fail:"cnfg_pullup_fault" }
+      ]
+    },
+    nao_sobe_20v: {
+      title: "🔋 Liga, mas não sobe para 20V / PD falha",
+      steps: [
+        { id:"c1", title:"1. I²C & Sensores (AMON/DCIN)", desc:"M1 lê corrente/tensão para negociar PD.", question:"Comunicação I2C_SMC_UPC ativa?", next:"c2", fail:"i2c_sensor_fault" },
+        { id:"c2", title:"2. Negociação PD & TBT ROM", desc:"Solicitação de boost via I2C_SMC_PWR.", question:"Carregador respondeu e VBUS subiu?", next:"c3", fail:"pd_neg_fault" },
+        { id:"c3", title:"3. Ajuste Buck para 12.6V", desc:"Comando via I2C_PWR_SMC.", question:"PPBUS estabilizou em 12.6V?", next:"conclusion_ok", fail:"buck_ctrl_fault" }
+      ]
+    },
+    sem_video_boot: {
+      title: "🖥️ Carrega, mas sem vídeo / Não dá boot",
+      steps: [
+        { id:"b1", title:"1. Clock & Reset M1", desc:"PMU_CLK32K_SOC + PMU_RESET_L.", question:"Clock 32kHz e Reset ativos?", next:"b2", fail:"clk_rst_fault" },
+        { id:"b2", title:"2. NAND & Boot PCIe", desc:"NAND_RESET_L + NAND_CLK24M.", question:"NAND recebeu clock/reset/alimentação?", next:"conclusion_ok", fail:"nand_boot_fault" }
+      ]
+    }
+  };
+
+  const conclusions = {
+    cd3217_fault: { t: "⚠️ CD3217/Entrada", m: "Verifique conector, fusível, curto em MLCCs ou CI. Injete 5V limitado a 0.3A." },
+    charger_fault: { t: "⚠️ ISL9240/Boost", m: "Sem 12.3V. Verifique CHGR_EN_MVR, cell sense ou curto na saída." },
+    aon_pmic_fault: { t: "⚠️ Fonte AON 3.8V", m: "PP3V8_AON ausente. Verifique P3V8AON_PWR_EN e buck síncrono." },
+    pmic_soc_fault: { t: "⚠️ PMICs ou Curto SoC", m: "Rails críticos ausentes. Verifique curto nos capacitores ou falha SPMI." },
+    osc_r_fault: { t: "⚠️ Resistor Oscilador 15k", m: "Pino 112(M21) ausente/oxidado. CI reinicia ou não inicia." },
+    i2c_addr_fault: { t: "⚠️ Endereço I²C Inválido", m: "Straps CNFG incorretos. Veja aba 'Straps & I2C'." },
+    eeprom_fault: { t: "⚠️ EEPROM Corrompida/Ausente", m: "CS_L sem pulso. Substitua ou regrave via SPI." },
+    uart_fw_fault: { t: "⚠️ Falha UART Master/Slave", m: "Firmware não carregado. Verifique linhas TX/RX e soldas." },
+    cnfg_pullup_fault: { t: "⚠️ Pull-ups I²C CNFG Ausentes", m: "I2CM_SDA_CNFG em pull-down. Verifique resistores e trilhas." },
+    i2c_sensor_fault: { t: "⚠️ Falha I²C ou Sensores", m: "M1 não lê AMON/DCIN. Verifique pull-ups e trilha aberta." },
+    pd_neg_fault: { t: "⚠️ Negociação PD Falha", m: "Carregador não sobe. Teste outro cargador PD ou verifique TBT ROM." },
+    buck_ctrl_fault: { t: "⚠️ Controle Buck Charger", m: "M1 não ajusta para 12.6V. Verifique I2C_PWR_SMC e feedback." },
+    clk_rst_fault: { t: "⚠️ Clock ou Reset Ausente", m: "M1 não inicia sem 32kHz e PMU_RESET_L. Verifique cristal/PMIC." },
+    nand_boot_fault: { t: "⚠️ Falha NAND ou PCIe", m: "Sem boot. Verifique NAND_CLK24M, trilhas PCIe ou NAND danificada. DFU pode resolver." },
+    conclusion_ok: { t: "✅ Sequência OK até aqui", m: "Medições normais. Problema pode ser GPU/display, firmware ou software. Recomende restore via Apple Configurator." },
+    conclusion_usbc_ok: { t: "✅ Controladores USB-C OK", m: "Endereço, EEPROM, UART e I²C válidos. Se preso em 5V, verifique cargador PD ou M1/PMIC." }
+  };
+
+  // Sequência 1-27
+  const seq27 = [
+    {n:1, t:"Conectar Cargador", d:"Gera PPVBUS_USBC0 → CD3217"},
+    {n:2, t:"Roteamento Interno", d:"PPHV_INT0_AONSW (5V roteado)"},
+    {n:3, t:"Fusível & Entrada Charger", d:"PPDCIN_USBC_AON → ISL9240"},
+    {n:4, t:"LDOs CD3217", d:"PP1V5_UPC0_LDO_CORE + PP3V3_UPC0_LDO (ROM/I2C)"},
+    {n:5, t:"Pull-up I2C_UPC", d:"PP3V3_UPC0_LDO alimenta pull-ups internos"},
+    {n:6, t:"Sensores Charger", d:"CSIN/CSIP (shunt) + AUX_DET (divisor)"},
+    {n:7, t:"Alimentação ISL9240", d:"PPCHGR_VDDA/VDDP + Cell sense"},
+    {n:8, t:"Boost Principal", d:"PPVBAT_AON_CHGR_REG = 12.3V"},
+    {n:9, t:"Enable Lógico", d:"CHGR_EN_MVR → P3V8AON_PWR_EN"},
+    {n:10, t:"Buck Síncrono AON", d:"P3V8AON_PWR_EN + PPBUS_AON → 3.8V"},
+    {n:11, t:"Regulação AON", d:"PP3V8_AON estabilizado"},
+    {n:12, t:"Shunt Principal", d:"PPBUS_VMAIN_VIN_ISNS"},
+    {n:13, t:"Enable PMICs", d:"PP3V8_AON_VDDMAIN → U7700/U8100"},
+    {n:14, t:"Clock 32kHz & SPMI", d:"U8100 gera clock, inicia protocolo SPMI com U7700"},
+    {n:15, t:"Rails NAND (U7700)", d:"PP2V5_AWAKE_NAND + PP0V88/PP1V8_AWAKE + Buck_SW"},
+    {n:16, t:"Rails RAM (U7700)", d:"PP1V06_S2SW_DRAM, PP0V764_S1_RAM, PP0V6_S1_VDDQL, PP1V2_AWAKE_PLL"},
+    {n:17, t:"LDOs para M1", d:"PP0V72_S2_VDD_LOW, PP0V855_S2SW_CIO, PP1V2_S2_CIO"},
+    {n:18, t:"Boost SPMU", d:"SPMU_BSTLQ_LX → PP5V_BSTLQ_VOUT_SPMU"},
+    {n:19, t:"Rails M1 (U8100)", d:"PPVDD_PCPU_AWAKE, SOC, GPU, ECPU, RAM, DISP, DCS"},
+    {n:20, t:"LDOs MPMU", d:"PP3V3_S2_UPC + PP1V8_AON_MPMU → PP3V3_AON/PP1V8_AON"},
+    {n:21, t:"ROM & EEPROM M1", d:"PP1V8_AWAKE + PP1V25_AWAKE_IO alimentam SOC ROM/EEPROM"},
+    {n:22, t:"Clock para M1", d:"PMU_CLK32K_SOC enviado"},
+    {n:23, t:"M1 Acorda", d:"Oscilador 24MHz + recebe PMU_RESET_L"},
+    {n:24, t:"Leitura de Sensores", d:"M1 pede AMON + DCIN_VSENSE via I2C_SMC_UPC"},
+    {n:25, t:"Negociação PD", d:"M1 solicita 20V via I2C_SMC_PWR → TBT ROM → Cargador"},
+    {n:26, t:"Ajuste Buck Final", d:"M1 ordena 12.6V via I2C_PWR_SMC"},
+    {n:27, t:"Boot NAND/PCIe", d:"NAND_RESET_L + NAND_CLK24M → Carrega sistema"}
+  ];
+
+  // Straps & Compatibilidade
+  const strapsData = `
+    <table><tr><th>CD</th><th>Pinos CNFG</th><th>Pull-Up</th><th>Pull-Down</th><th>Endereço</th></tr>
+    <tr><td>CD3217</td><td>111(GND/NC) + 8,19</td><td><span class="tag ok">0x38</span></td><td><span class="tag warn">0x3B (OTP)</span></td><td>Normal: 0x38/0x3F | OTP: 0x3B/0x3C</td></tr>
+    <tr><td>CD3215</td><td>44 + 29,37</td><td><span class="tag ok">0x38</span></td><td><span class="tag warn">0x20</span></td><td>Normal: 0x38/0x3F | PD: 0x20/0x27</td></tr></table>
+    <h4 style="margin:10px 0 6px;color:var(--accent)">🔧 Modificações por Placa</h4>
+    <table><tr><th>Placa/Slot</th><th>Endereço</th><th>Resistor I2C_ADDR</th><th>Ação</th></tr>
+    <tr><td>UB300 (A2141/A2251)</td><td>0x3B</td><td>140kΩ</td><td>Mover RB308/RB309 → PP3V3_UPC_TA_LDO</td></tr>
+    <tr><td>UB400 (A2141/A2251)</td><td>0x3C</td><td>205kΩ</td><td>Mover RB408/RB409 → PP3V3_UPC_TA_LDO</td></tr>
+    <tr><td>UG400 (A2442/A2485)</td><td>0x3B</td><td>140kΩ</td><td>Mover RG409→RG411. Remover RG201, adicionar 140k</td></tr>
+    <tr><td>U5500 (M2 Air 820-02536)</td><td>0x3A</td><td>84.5kΩ</td><td>Mover R5508→R5610. Adicionar 84.5k em R5650</td></tr></table>
+    <p class="tag warn" style="margin-top:8px">⚠️ T2 (A2141/A2251): Realocar resistores/trilhas. Silicon: Slots de modificação já vêm de fábrica. B12 ↔ B13 não são intercambiáveis.</p>
+  `;
+
+  // Osciloscópio & Protocolos
+  const scopeData = `
+    <table><tr><th>Sinal / Pino</th><th>Config</th><th>✅ Padrão</th><th>❌ Falha</th></tr>
+    <tr><td><b>EEPROM CS_L (Pino 1)</b><br>SPI</td><td>1V/div, 500ms</td><td>Pulsos periódicos durante init</td><td>Linha reta ~3.3V ou ruído aleatório</td></tr>
+    <tr><td><b>UART TX/RX</b><br>Master ↔ Slave</td><td>1V/div, 500ms</td><td>Pacotes assimétricos + handshake</td><td>Sem atividade ou reset a cada 2s</td></tr>
+    <tr><td><b>I2C CNFG (SDA/SCL)</b><br>Pin 8/19</td><td>1V/div, 500ms</td><td>Pull-up estável ~3.3V + ondulação</td><td>Pull-down ou flutuante</td></tr>
+    <tr><td><b>VBUS (CC1/CC2)</b><br>PD Boost</td><td>10V/div, 500ms</td><td>5V estável → handshake → sobe para 20V</td><td>Queda para 0V, ripple ou preso em 5V</td></tr></table>
+    <h4 style="margin:12px 0 8px;color:var(--accent)">🔗 Protocolos Principais</h4>
+    <ul>
+      <li><span class="tag">I2C_SMC_UPC</span> Leitura de AMON/DCIN_VSENSE (pré-PD)</li>
+      <li><span class="tag">I2C_SMC_PWR</span> Comando de boost para 20V + TBT ROM</li>
+      <li><span class="tag">SPMI</span> Comunicação M1 ↔ U8100/U7700 (barramento síncrono)</li>
+      <li><span class="tag">UART</span> Firmware slave carrega dados do master</li>
+      <li><span class="tag">SPI</span> Leitura da EEPROM do CD3217 (CS_L ativo-baixo)</li>
+    </ul>
+  `;
+
+  // Estados de Energia
+  const powerStates = `
+    <table><tr><th>Estado</th><th>Rails Ativos</th><th>Gatilho</th><th>Se travar...</th></tr>
+    <tr><td><b>Standby (G3H)</b></td><td>PPVBUS_USBC0, PPDCIN_USBC_AON, LDOs CD3217</td><td>Conexão do carregador</td><td>Verifique fusível, OVP, curto na entrada</td></tr>
+    <tr><td><b>AON</b></td><td>PPVBAT_AON_CHGR_REG (12.3V), PP3V8_AON, I2C_UPC</td><td>CHGR_EN_MVR → Buck síncrono</td><td>ISL9240, cell sense, enable lógico</td></tr>
+    <tr><td><b>Awake</b></td><td>PP1V8_S2, PPVDD_SOC, NAND/RAM rails, 32kHz</td><td>PMU_RESET_L + PMU_CLK32K_SOC</td><td>SPMI, U8100/U7700, clock/reset M1</td></tr>
+    <tr><td><b>S0 (Boot)</b></td><td>12.6V PPBUS, NAND_CLK24M, PCIe, Display</td><td>NAND_BOOT via PCIe + Firmware</td><td>NAND, SSD, GPU/Display, DFU</td></tr></table>
+  `;
+
+  // Renderização
+  function switchTab(tab) {
+    state.tab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+    if(tab === 'diag') progFill.style.width = state.symptom ? `${(state.stepIdx / (flows[state.symptom]?.steps.length || 1)) * 100}%` : '0%';
+    else progFill.style.width = '100%';
+    render();
+  }
+
+  function renderSymptom() {
+    screen.innerHTML = `
+      <div class="card">
+        <h3>📋 Selecione o Sintoma</h3>
+        <p>Escolha o comportamento observado para iniciar o fluxo interativo.</p>
+        <div class="btn-grid">
+          <button class="btn primary" onclick="startFlow('nao_liga')">🔌 Não liga / Sem resposta</button>
+          <button class="btn primary" onclick="startFlow('preso_5v')">🔄 Preso em 5V / Reiniciando</button>
+          <button class="btn primary" onclick="startFlow('nao_sobe_20v')">🔋 Não sobe para 20V</button>
+          <button class="btn primary" onclick="startFlow('sem_video_boot')">🖥️ Sem vídeo / Não dá boot</button>
+        </div>
+      </div>`;
+  }
+
+  function startFlow(key) { state.symptom = key; state.stepIdx = 0; state.history = []; state.failedAt = null; progFill.style.width = '0%'; renderStep(); }
+
+  function renderStep() {
+    const flow = flows[state.symptom]; const total = flow.steps.length;
+    progFill.style.width = `${(state.stepIdx / total) * 100}%`;
+    const s = flow.steps[state.stepIdx];
+    let meas = s.measurements ? s.measurements.map(m => `<li><span class="tag">${m.rail}</span> → Esperado: <b>${m.exp}</b></li>`).join('') : '';
+    screen.innerHTML = `
+      <div class="card">
+        <h3>${s.title}</h3>
+        <p>${s.desc}</p>
+        ${meas ? `<ul>${meas}</ul>` : ''}
+        <p style="margin-top:10px;font-weight:500;">${s.question}</p>
+        <div class="actions">
+          <button class="btn fail" onclick="answer(false)">❌ Falha / Ausente</button>
+          <button class="btn success" onclick="answer(true)">✅ OK / Presente</button>
+        </div>
+      </div>`;
+  }
+
+  function answer(ok) {
+    const flow = flows[state.symptom]; const s = flow.steps[state.stepIdx];
+    state.history.push({ id: s.id, res: ok ? 'ok' : 'fail' });
+    if(ok) { state.stepIdx++; state.stepIdx < flow.steps.length ? renderStep() : renderConclusion(s.next); }
+    else { state.failedAt = s.fail; renderConclusion(s.fail); }
+  }
+
+  function renderConclusion(key) {
+    progFill.style.width = '100%'; const c = conclusions[key];
+    screen.innerHTML = `
+      <div class="card conclusion">
+        <h2>${c.t}</h2>
+        <p>${c.m}</p>
+        <div class="btn-grid">
+          <button class="btn primary" onclick="renderSymptom()">🔄 Novo Diagnóstico</button>
+          <button class="btn" onclick="exportReport()">📄 Baixar Relatório</button>
+        </div>
+      </div>`;
+  }
+
+  function exportReport() {
+    const flow = flows[state.symptom] || {};
+    let txt = `RELATÓRIO DIAGNÓSTICO MACBOOK\nSintoma: ${flow.title || state.symptom}\nHistórico:\n`;
+    state.history.forEach((h, i) => { const s = flow.steps?.find(x => x.id === h.id); txt += `${i+1}. ${s?.title || h.id} → ${h.res === 'ok' ? 'OK' : 'FALHA'}\n`; });
+    if(state.failedAt) txt += `\nDiagnóstico: ${conclusions[state.failedAt]?.t}\n${conclusions[state.failedAt]?.m}\n`;
+    txt += `\nGerado em: ${new Date().toLocaleString('pt-BR')}`;
+    const b = new Blob([txt], { type: 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'diagnostico_macbook.txt'; a.click(); URL.revokeObjectURL(a.href);
+  }
+
+  function renderSeq() {
+    let grid = seq27.map(s => `
+      <div class="seq-step ${state.seqActive === s.n ? 'active' : ''}" onclick="showSeq(${s.n})">
+        <h4>#${s.n} ${s.t}</h4>
+        <p>${s.d}</p>
+      </div>`).join('');
+    const active = seq27.find(s => s.n === state.seqActive);
+    screen.innerHTML = `
+      <div class="card">
+        <h3>🗺️ Sequência de Inicialização M1 (1-27)</h3>
+        <p>Clique em um bloco para ver detalhes ou use a lista abaixo para navegar.</p>
+        <div class="seq-grid">${grid}</div>
+        <div style="margin-top:12px; padding:10px; background:#1a1d25; border-radius:8px; border:1px solid var(--border);">
+          <b style="color:var(--accent)">Detalhe #${active.n}:</b> ${active.d}<br>
+          <small style="color:var(--text-muted)">Dica: Meça os rails listados em ordem. Se ausente, interrompa e verifique o estágio anterior.</small>
+        </div>
+      </div>`;
+  }
+  window.showSeq = (n) => { state.seqActive = n; renderSeq(); };
+
+  function renderRefs() {
+    screen.innerHTML = `
+      <div class="card ref-card" id="ref1">
+        <div class="ref-header" onclick="toggleRef('ref1')"><h3>📖 Endereçamento & Compatibilidade</h3><span>▼</span></div>
+        <div class="ref-content">${strapsData}</div>
+      </div>`;
+    setTimeout(() => document.getElementById('ref1').classList.add('open'), 50);
+  }
+
+  function renderScope() { screen.innerHTML = `<div class="card">${scopeData}</div>`; }
+  function renderPower() { screen.innerHTML = `<div class="card">${powerStates}</div>`; }
+
+  window.toggleRef = (id) => {
+    const el = document.getElementById(id); el.classList.toggle('open');
+    el.querySelector('.ref-header span').textContent = el.classList.contains('open') ? '▲' : '▼';
+  };
+
+  function render() {
+    switch(state.tab) {
+      case 'diag': if(!state.symptom) renderSymptom(); else if(!state.failedAt && state.stepIdx < (flows[state.symptom]?.steps.length || 0)) renderStep(); else renderConclusion(state.failedAt || 'conclusion_ok'); break;
+      case 'seq': renderSeq(); break;
+      case 'ref': renderRefs(); break;
+      case 'scope': renderScope(); break;
+      case 'power': renderPower(); break;
+    }
+  }
+
+  render();
+</script>
+</body>
+</html>
