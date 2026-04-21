@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEBUG - Padrões Salvos</title>
+<style>
+:root{--bg:#0f1923;--card:#1a2733;--border:#2a3744;--text:#e0e6ed;--text2:#8899aa;--accent:#00e676;--warn:#ffc107;--danger:#ff5252;--accent2:#00bcd4;--radius:10px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:system-ui;padding:15px;}
+.panel{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:20px;margin-bottom:20px;}
+.panel-title{font-size:1.2rem;font-weight:800;margin-bottom:15px;}
+.btn{padding:12px 20px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.9rem;color:#fff;width:100%;margin-bottom:8px;}
+.btn-accent{background:var(--accent);color:#000;}
+.btn-purple{background:#7c4dff;}
+.btn-warn{background:var(--warn);color:#000;}
+.btn-danger{background:var(--danger);}
+.table-wrapper{overflow-x:auto;}
+.st{width:100%;border-collapse:collapse;}
+.st th,.st td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:center;font-size:0.8rem;}
+.st th{background:rgba(0,230,118,0.1);color:var(--accent);font-size:0.7rem;text-transform:uppercase;}
+#debugLog{background:#000;color:#0f0;padding:15px;border-radius:8px;font-family:monospace;font-size:0.75rem;white-space:pre-wrap;max-height:400px;overflow-y:auto;margin-bottom:15px;}
+</style>
+</head>
+<body>
+
+<div class="panel">
+    <div class="panel-title">🔧 DEBUG - Padrões Salvos</div>
+    <div id="debugLog">Aguardando ações...
+</div>
+    <button class="btn btn-accent" onclick="testSave()">1️⃣ Simular SALVAR padrão</button>
+    <button class="btn btn-purple" onclick="testRender()">2️⃣ Forçar RENDER</button>
+    <button class="btn btn-warn" onclick="testLocalStorage()">3️⃣ Ver localStorage</button>
+    <button class="btn btn-danger" onclick="testClear()">4️⃣ Limpar tudo</button>
+    <button class="btn" style="background:#555" onclick="testContainerExists()">5️⃣ Testar container</button>
+</div>
+
+<div class="panel" id="pnlSaved" style="border-color: rgba(255,193,7,0.3);">
+    <div class="panel-title" style="color:#ffc107;">📌 4. Padrões Salvos</div>
+    <div id="savedPatternsContainer" style="margin-top:10px;">
+        <div style="text-align:center; color:var(--text2); padding:20px; font-style:italic;">Nenhum padrão salvo ainda.</div>
+    </div>
+</div>
+
+<script>
+var log = document.getElementById('debugLog');
+function dbg(msg) {
+    var ts = new Date().toLocaleTimeString();
+    log.textContent += '\n[' + ts + '] ' + msg;
+    log.scrollTop = log.scrollHeight;
+}
+
+// ============================================================
+// CÓDIGO EXATO DO robobet37_v18.html
+// ============================================================
+var savedPatterns = [];
+try {
+    savedPatterns = JSON.parse(localStorage.getItem('robobet_saved_patterns') || '[]');
+    dbg('✅ localStorage carregado: ' + savedPatterns.length + ' padrões');
+} catch(e) {
+    dbg('❌ Erro ao carregar localStorage: ' + e.message);
+    savedPatterns = [];
+}
+
+function persistSaved() {
+    dbg('persistSaved() chamado...');
+    try {
+        localStorage.setItem('robobet_saved_patterns', JSON.stringify(savedPatterns));
+        dbg('  ✅ localStorage atualizado');
+    } catch(e) {
+        dbg('  ❌ Erro localStorage: ' + e.message);
+    }
+    dbg('  Chamando renderSavedPatterns()...');
+    renderSavedPatterns();
+}
+
+function renderSavedPatterns() {
+    dbg('renderSavedPatterns() chamado');
+    var container = document.getElementById('savedPatternsContainer');
+    if(!container) { 
+        dbg('  ❌ CONTAINER NÃO ENCONTRADO!'); 
+        return; 
+    }
+    dbg('  ✅ Container encontrado');
+    dbg('  savedPatterns.length = ' + savedPatterns.length);
+
+    try {
+        if(savedPatterns.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:var(--text2); padding:20px; font-style:italic;">Nenhum padrão salvo ainda.</div>';
+            dbg('  → Mostrando "nenhum padrão"');
+            return;
+        }
+
+        var h = '<div class="table-wrapper"><table class="st" style="min-width:500px;"><thead><tr>';
+        h += '<th>#</th><th>📅 Salvo</th><th>🎯 HR%</th><th>Greens/Total</th><th>Filtros</th><th>Ações</th>';
+        h += '</tr></thead><tbody>';
+
+        for(var i = 0; i < savedPatterns.length; i++) {
+            var sp = savedPatterns[i];
+            dbg('  Processando padrão #' + (i+1) + ': ' + JSON.stringify(sp.params));
+
+            var color = sp.hr >= 80 ? 'var(--accent)' : sp.hr >= 70 ? 'var(--warn)' : 'var(--accent2)';
+
+            var cnL2 = {'DRAW_0':'🟡 0×0','DRAW_GOLS':'🟡 Emp c/ gols','PERDENDO':'🔴 Perdendo','PERD_1':'🔴 Perd -1','PERD_2':'🔴 Perd -2+','0x0_OU_PERD':'🔴 0×0/Perd','EMP_PERD':'🟠 Emp/Perd','EMP_PERD_S_GOLS':'🔴 0×0/Perd','GOLS1':'⚽ Gols≥1','GOLS1_PERD':'⚽🔴 Gols≥1+Perd','GOLS1_EMP':'⚽🟡 Gols≥1+Emp'};
+            var tags = '<div style="display:flex;flex-direction:column;gap:2px;font-size:0.78rem;">';
+            var cn2 = sp.params.cenario || 'ALL';
+            dbg('    cenario = ' + cn2);
+            if(cn2 !== 'ALL' && cnL2[cn2]) tags += '<div style="color:#ff6b6b;font-weight:700;">' + cnL2[cn2] + '</div>';
+            var mP2 = [];
+            if(sp.params.p1 > 0) mP2.push('P1≥'+sp.params.p1);
+            if(sp.params.p2 > 0) mP2.push('P2≥'+sp.params.p2);
+            if(sp.params.exc > 0) mP2.push('ExC≥'+sp.params.exc);
+            if(sp.params.xg > 0) mP2.push('xG≥'+sp.params.xg);
+            if(sp.params.pTotal > 0) mP2.push('PT≥'+sp.params.pTotal);
+            if(mP2.length) tags += '<div style="color:#8be9fd;">' + mP2.join(' · ') + '</div>';
+            tags += '</div>';
+
+            h += '<tr>';
+            h += '<td style="font-weight:800;color:var(--text2)">' + (i+1) + '</td>';
+            h += '<td style="font-size:0.75rem;color:var(--text2)">' + sp.savedAt + '</td>';
+            h += '<td style="font-size:1.1rem;font-weight:800;color:' + color + '">' + parseFloat(sp.hr||0).toFixed(1) + '%</td>';
+            h += '<td style="font-size:0.8rem;color:var(--text2)">' + sp.hits + '/' + sp.sample + '</td>';
+            h += '<td style="text-align:left;line-height:1.5">' + tags + '</td>';
+            h += '<td style="white-space:nowrap">';
+            h += '<button class="btn btn-accent" style="padding:6px 10px;font-size:0.7rem;min-height:32px;width:auto;display:inline-block" onclick="dbg(\'Revalidar #'+(i+1)+'\')">🔄</button> ';
+            h += '<button class="btn btn-danger" style="padding:6px 10px;font-size:0.7rem;min-height:32px;width:auto;display:inline-block" onclick="deleteSaved(' + i + ')">🗑️</button>';
+            h += '</td></tr>';
+        }
+
+        h += '</tbody></table></div>';
+        dbg('  HTML gerado: ' + h.length + ' chars');
+        container.innerHTML = h;
+        dbg('  ✅ container.innerHTML ATUALIZADO!');
+        dbg('  container.children: ' + container.children.length);
+
+    } catch(e) { 
+        dbg('  ❌ ERRO: ' + e.message + ' | Stack: ' + (e.stack||'').substring(0,200)); 
+        container.innerHTML = '<div style="color:red;padding:10px;">Erro: '+e.message+'</div>'; 
+    }
+}
+
+function deleteSaved(i) {
+    savedPatterns.splice(i, 1);
+    persistSaved();
+    dbg('Padrão #' + (i+1) + ' deletado');
+}
+
+// ============================================================
+// FUNÇÕES DE TESTE
+// ============================================================
+function testSave() {
+    dbg('\n=== TESTE: Salvar padrão ===');
+    var pattern = {
+        id: Date.now(),
+        savedAt: new Date().toISOString().substring(0, 10),
+        params: {p1: 16, p2: 0, exc: 0.5, xg: 0, cenario: 'PERD_1', pTotal: 30},
+        cutoff: 55,
+        minLgGames: 8,
+        hr: 78.5,
+        hits: 120,
+        sample: 153,
+        approvedLeagues: ['Premier League', 'La Liga'],
+        oosHr: null,
+        oosSample: 0
+    };
+    dbg('Padrão criado: ' + JSON.stringify(pattern.params));
+    savedPatterns.push(pattern);
+    dbg('savedPatterns.length agora: ' + savedPatterns.length);
+    persistSaved();
+    dbg('=== FIM TESTE ===');
+
+    setTimeout(function() {
+        var pnl = document.getElementById('pnlSaved');
+        if(pnl) pnl.scrollIntoView({behavior:'smooth'});
+    }, 200);
+}
+
+function testRender() {
+    dbg('\n=== TESTE: Forçar render ===');
+    renderSavedPatterns();
+    dbg('=== FIM ===');
+}
+
+function testLocalStorage() {
+    dbg('\n=== TESTE: localStorage ===');
+    var raw = localStorage.getItem('robobet_saved_patterns');
+    dbg('Raw: ' + (raw ? raw.substring(0, 500) : 'NULL'));
+    try {
+        var parsed = JSON.parse(raw || '[]');
+        dbg('Parsed: ' + parsed.length + ' padrões');
+        for(var i = 0; i < parsed.length; i++) {
+            dbg('  #' + (i+1) + ': params=' + JSON.stringify(parsed[i].params) + ' hr=' + parsed[i].hr);
+        }
+    } catch(e) {
+        dbg('❌ Erro parse: ' + e.message);
+    }
+    dbg('=== FIM ===');
+}
+
+function testClear() {
+    dbg('\n=== TESTE: Limpar ===');
+    savedPatterns = [];
+    localStorage.removeItem('robobet_saved_patterns');
+    renderSavedPatterns();
+    dbg('✅ Tudo limpo');
+    dbg('=== FIM ===');
+}
+
+function testContainerExists() {
+    dbg('\n=== TESTE: Container ===');
+    var c = document.getElementById('savedPatternsContainer');
+    dbg('Container: ' + (c ? '✅ EXISTE' : '❌ NÃO EXISTE'));
+    if(c) {
+        dbg('  tagName: ' + c.tagName);
+        dbg('  parentNode: ' + c.parentNode.id);
+        dbg('  innerHTML length: ' + c.innerHTML.length);
+        dbg('  innerHTML preview: ' + c.innerHTML.substring(0, 200));
+        dbg('  offsetHeight: ' + c.offsetHeight);
+        dbg('  display: ' + getComputedStyle(c).display);
+        dbg('  visibility: ' + getComputedStyle(c).visibility);
+    }
+    dbg('=== FIM ===');
+}
+
+// Render on load
+dbg('\n=== INIT: Renderizando ao carregar ===');
+renderSavedPatterns();
+</script>
+</body>
+</html>
